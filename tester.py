@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 from numpy import pi, arcsin, sqrt
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
+import time
+
 
 a = 0.246 # Graphene lattice constant in nm
 
@@ -21,46 +23,48 @@ def lorentzian(x, b, c, x0, lw):
    f = b + c / pi * lw / ((x-x0)**2 + lw**2)
    return(f)
 
+def jacobian(x, b, c, x0, lw):
+    # Define partial derivatives
+    Ldiffb = np.ones(x.shape)
+    Ldiffc = lw / pi / ((x-x0)**2 + lw**2)
+    Ldiffx0 = c / pi * 2 * lw * (x-x0) / ((x-x0)**2 + lw**2)**2
+    Ldifflw = c / pi * (1 / ((x-x0)**2 + lw**2) -  2 * lw**2 / ((x-x0)**2 + lw**2)**2 )
+    jac = np.stack((Ldiffb, Ldiffc, Ldiffx0, Ldifflw)).T
+    return(jac)
 
-test = (np.array((1,2,3)))
-test_ma = np.ma.masked_array
 
-# =============================================================================
-# fitrange = (240,290)
-# plotrange = (240,290)
-# 
-# i_start = min(range(len(xdata)), key=lambda i: abs(xdata[i]-fitrange[0]))
-# i_stop = min(range(len(xdata)), key=lambda i: abs(xdata[i]-fitrange[1]))
-# 
-# x, y = 5, 18
-# ydata = data[y, x]
-# 
-# # Slice data to keep only the relevant peak
-# xdata_fit = xdata[i_start:i_stop]
-# ydata_fit = ydata[i_start:i_stop]
-# 
-# # Optional: Replace x0 initial value by position of max value in the list
-# x0 = xdata_fit[np.argmax(ydata_fit)]
-# p0 = [10, 200, x0, 2]
-# 
-# fig = plt.figure()
-# ax1 = fig.add_subplot(211)
-# ax1.scatter(xdata_fit, ydata_fit, zorder=1)
-# ax1.plot(xdata_fit, lorentzian(xdata_fit, *p0))
-# ax1.set_xlabel(r"Raman shift (cm$^{-1})$")
-# ax1.set_ylabel("Intensity (a.u.)")
-# plt.tight_layout()
-# 
-# popt, pcov = curve_fit(lorentzian, xdata_fit, ydata_fit, p0)#, bounds=(lbounds, ubounds))
-# print(popt)
-# 
-# fig = plt.figure()
-# ax1 = fig.add_subplot(211)
-# ax1.scatter(xdata_fit, ydata_fit, zorder=1)
-# ax1.plot(xdata_fit, lorentzian(xdata_fit, *p0))
-# ax1.plot(xdata_fit, lorentzian(xdata_fit, *popt))
-# ax1.set_xlabel(r"Raman shift (cm$^{-1})$")
-# ax1.set_ylabel("Intensity (a.u.)")
-# plt.tight_layout()
-# =============================================================================
+x, y = 40, 56
 
+p0 = [0, 2E4, 1, 15]
+
+fitrange = (2600, 2800)
+
+# This expression searches the xlist for the wave number values 
+# closest to the chosen fitrange and retrieves their indexes
+i_start = np.abs(xdata - fitrange[0]).argmin()
+i_stop = np.abs(xdata - fitrange[1]).argmin()
+
+# Define boundaries to speed up the fitting routine
+lbounds = np.array((-np.inf, 0,      0,  0))
+ubounds = np.array((np.inf,  np.inf, np.inf, np.inf))
+
+# Retrieve the spectrum of the current scan data point
+ydata = data[y,x]
+
+# Slice ydata to keep only the relevant peak
+# Slice xdata to keep only the relevant peak
+xdata_fit = xdata[i_start:i_stop]
+ydata_fit = ydata[i_start:i_stop]
+
+# Determine highest data point, use position as x0 starting value
+p0[2] = xdata_fit[np.argmax(ydata_fit)]
+
+popt, pcov = curve_fit(lorentzian, xdata_fit, ydata_fit, p0, bounds=(lbounds, ubounds), jac=jacobian)
+    
+plt.scatter(xdata_fit, ydata_fit, zorder=1)
+plt.plot(xdata_fit, lorentzian(xdata_fit, *p0))
+plt.plot(xdata_fit, lorentzian(xdata_fit, *popt))
+plt.xlabel(r"Raman shift (cm$^{-1})$")
+plt.ylabel("Intensity (a.u.)")
+plt.show()
+print(popt)

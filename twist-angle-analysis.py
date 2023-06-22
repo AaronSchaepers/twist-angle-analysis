@@ -9,7 +9,9 @@
 PREPARATION
 
     Export Raman maps from ProjectFive as .txt by choosing "Table" in the
-    export menu. Make sure to set the spectral unit to "rel. 1/cm".
+    export menu. Set the spectral unit to "rel. 1/cm".
+    Also, make sure the file "phondis_graphene.dat" is located in the same 
+    directory as this code.
 
 
 HOW TO USE THIS CODE

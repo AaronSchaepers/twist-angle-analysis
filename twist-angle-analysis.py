@@ -6,6 +6,13 @@
 @github: https://github.com/AaronSchaepers/twist-angle-analysis
 
 
+IDEAS
+    - Use the threshold dynamically in the interactive plot
+    - Make one interactive map per peak 
+    - Disable intensity threshold, at least upper bound, because the max int 
+      values depend heavily on the integration time
+    - Export pdfs with dpi = 800 directly from interactive plot
+
 PREPARATION
 
     Export Raman maps from ProjectFive as .txt by choosing "Table" in the
@@ -26,12 +33,12 @@ HOW TO USE THIS CODE
     the main body of this code (kind of the back end).
     As a user, here is what you have to do to analyse your Raman Scan:
     
-    1. User input section
+    1. User input section:
         - Provide the required information about the scan (see comments)
         - Choose which peaks to fit and to map
         - Run this code to start the fitting and mapping, or proceed to the
 
-    2. Advanced user input section
+    2. Advanced user input section:
         - For each peak, set the starting parameters for the Lorentzian fit
         - For each fitting parameter and each peak, define a threshold interval
           within which the fit results are accepted as realistic.
@@ -72,17 +79,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "//Users/Aaron/Desktop/Test_data" 
+folder = "//Users/Aaron/Desktop/ETIRF04-100/TA" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "test_data.txt" 
+file = "ETIRF04-100_TA_nosubtraction.txt" 
 
 # In 1/cm, a spectral range without any features. This is used to calculate 
 # the mean background noise which is subtracted from the data
 spectral_mean_range = (300, 350) 
 
-size_px = (100, 100)       # Size of the Scan in pixels
-size_um = (7, 7)        # Size of the Scan in µm
+size_px = (86*3, 57*3)       # Size of the Scan in pixels
+size_um = (86, 57)        # Size of the Scan in µm
 
 # What peaks shall be fitted?
 b_fit_TA = False
@@ -115,7 +122,7 @@ startparams_2D = [0, 2E4, 15]
 #       threshold intervals. If any parameter lies outside of its threshold
 #       interval, the corresponding data point is excluded from the map.
 
-thresh_TA_c = [40, 600]         # Intensity
+thresh_TA_c = [20, 6000]         # Intensity
 thresh_TA_x0 = [250, 275]   # Position
 thresh_TA_lw = [0.4, 9]         # Linewidth
 thresh_TA_lw_std = [0,5]     # Covariance of linewidth
@@ -256,7 +263,7 @@ def fit_to_map(xdata, data, pdict):
     
     print("Fitting progress:")
     for x in range(nx):
-        progress = np.round(x/nx*100)
+        progress = np.round(x/nx*100, 1)
         print(f"{progress}%")
         for y in range(ny):
             
@@ -511,7 +518,7 @@ def map_theta(fitresults, fiterrors, pdict, folder):
 
 # This function is activated when double clicking in tne interactive map and 
 # plots the spectrum + fit in the point that was clicked
-def onclick(event):
+def onclick(event, fitresults, fiterrors, pdict):
     if event.dblclick:
         if event.button == 1:
             if isinstance(event.ydata, float): # Check if the doubleclick event happened inside the plot and returns correct values
@@ -522,31 +529,36 @@ def onclick(event):
                 x_map = np.abs(xaxis - valx).argmin()
                 y_map = np.abs(yaxis - valy).argmin()
                 
-                # Find start and stop indices of plotrange in spectrum
-                i_start = np.abs(xdata - plotrange[0]).argmin()
-                i_stop = np.abs(xdata - plotrange[1]).argmin()
+                # Extract required variables from the pdict
+                plotrange = pdict["plotrange"]
+                fitrange = pdict["fitrange"]
                 
+                # Find start and stop indices of plotrange and fitrange in spectrum
+                i_plotstart = np.abs(xdata - plotrange[0]).argmin()
+                i_plotstop = np.abs(xdata - plotrange[1]).argmin()
+                i_fitstart = np.abs(xdata - fitrange[0]).argmin()
+                i_fitstop = np.abs(xdata - fitrange[1]).argmin()
 
-                # Restrict xdata and ydata to relevant plotrange
-                xdata_loc = xdata[i_start:i_stop]
-                ydata_loc = data[-y_map, x_map, i_start:i_stop]
+                # Create x and y array in the plotrange
+                xdata_plot = xdata[i_plotstart:i_plotstop]
+                ydata_plot = data[-y_map, x_map, i_plotstart:i_plotstop]
+                # Create x array in the fitrange
+                xdata_fit = xdata[i_fitstart:i_fitstop]
 
                 # Clear the previous spectrum + fit from the plot
                 ax3.cla()
                 
                 # Scatter the spectrum
-                ax3.scatter(xdata_loc, ydata_loc, s=5, zorder=1)
+                ax3.scatter(xdata_plot, ydata_plot, s=5, zorder=1)
                 
                 # Plot the fit if it succeeded in that point
                 if fiterrors[-y_map, x_map] == 0:
-                    ax3.plot(xdata_loc, lorentzian(xdata_loc, *fitresults[-y_map, x_map]), color="tab:red")
+                    ax3.plot(xdata_fit, lorentzian(xdata_fit, *fitresults[-y_map, x_map]), color="tab:red")
                     ax3.set_xlim(plotrange)
                     textstr = r"I = %.0f " %(fitresults[-y_map, x_map][1])\
                         + "\n" + "$\omega$ = %.2f rel. 1/cm" %(fitresults[-y_map, x_map][2])\
                         + "\n" + "$\Gamma$ = %.2f 1/cm" %(fitresults[-y_map, x_map][3])
                     ax3.text(0.01, 0.95, textstr, ha='left', va='top', transform=ax3.transAxes)
-                else:
-                    print("Here the fit failed")
                     
                 # Update the plot in the window
                 ax3.figure.canvas.draw()
@@ -602,7 +614,7 @@ def make_figure(fitresults, fiterrors, pdict):
     ax1.set_title(peakname + " position")
     ax2.set_title(peakname + " linewidth")
    
-    fig.canvas.mpl_connect('button_press_event', onclick)
+    fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, fitresults, fiterrors, pdict))
     
     return(ax0, ax1, ax2, ax3)
 
@@ -694,33 +706,24 @@ if b_fit_LO == True:
 if b_fit_2D == True:
     fitresults_2D, fitresults_std_2D, fiterrors_2D = fit_to_map(xdata, data, dict_2D)
      
-# Static mapping and saving of figures
+# Save maps, open interactive figures
 if b_map_TA == True:
     map_lorentz_parameters(fitresults_TA, fiterrors_TA, dict_TA, folder)
     map_theta(fitresults_TA, fiterrors_TA, dict_TA, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, dict_TA)
 if b_map_G == True:
     map_lorentz_parameters(fitresults_G, fiterrors_G, dict_G, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, dict_G)
 if b_map_LO == True:
     map_lorentz_parameters(fitresults_LO, fiterrors_LO, dict_LO, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_LO, fiterrors_LO, dict_LO)
 if b_map_2D == True:
     map_lorentz_parameters(fitresults_2D, fiterrors_2D, dict_2D, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, dict_2D)
+
 
 # Create lists that are needed to locate the index coordinates of a click event
 xaxis = np.linspace(0, size_um[0], size_px[0])
 yaxis = np.linspace(0, size_um[1], size_px[1]) 
-
-# Interactive mapping
-if b_map_TA == True:
-    fitresults, fiterrors, plotrange = fitresults_TA, fiterrors_TA, dict_TA["plotrange"]
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, dict_TA)
-if b_map_G == True:
-    fitresults, fiterrors, plotrange = fitresults_G, fiterrors_G, dict_G["plotrange"]
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, dict_G)
-if b_map_LO == True:
-    fitresults, fiterrors, plotrange = fitresults_LO, fiterrors_LO, dict_LO["plotrange"]
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_LO, fiterrors_LO, dict_LO)
-if b_map_2D == True:
-    fitresults, fiterrors, plotrange = fitresults_2D, fiterrors_2D, dict_2D["plotrange"]
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, dict_2D)
     
     

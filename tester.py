@@ -33,11 +33,11 @@ def jacobian(x, b, c, x0, lw):
     return(jac)
 
 
-x, y = 40, 56
+x, y = 120, 56
 
-p0 = [0, 2E4, 1, 15]
+p0 = [0, 250, 0, 2]
 
-fitrange = (2600, 2800)
+fitrange = (240, 290)
 
 # This expression searches the xlist for the wave number values 
 # closest to the chosen fitrange and retrieves their indexes

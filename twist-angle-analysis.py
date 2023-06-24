@@ -12,6 +12,7 @@ IDEAS
     - Disable intensity threshold, at least upper bound, because the max int 
       values depend heavily on the integration time
     - Export pdfs with dpi = 800 directly from interactive plot
+    - Progress bars
 
 PREPARATION
 
@@ -124,23 +125,19 @@ startparams_2D = [0, 2E4, 15]
 
 thresh_TA_c = [20, 6000]         # Intensity
 thresh_TA_x0 = [250, 275]   # Position
-thresh_TA_lw = [0.4, 9]         # Linewidth
-thresh_TA_lw_std = [0,5]     # Covariance of linewidth
+thresh_TA_lw = [0.2, 9]         # Linewidth
 
 thresh_G_c = [1E3, 1E15]       # Intensity
 thresh_G_x0 = [1577, 1587]    # Position
 thresh_G_lw = [4, 25]         # Linewidth
-thresh_G_lw_std = [0,20]      # Covariance of linewidth
 
 thresh_LO_c = [300, 1E5]      # Intensity
 thresh_LO_x0 = [1610, 1630]   # Position
 thresh_LO_lw = [0.4, 15]      # Linewidth
-thresh_LO_lw_std = [0,20]     # Covariance of linewidth
 
 thresh_2D_c = [1E3, 1E7]      # Intensity
 thresh_2D_x0 = [2650, 2700]   # Position
 thresh_2D_lw = [8, 30]        # Linewidth
-thresh_2D_lw_std = [0,20]     # Covariance of linewidth
 
 max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  #       values will be excluded from the map.
@@ -241,7 +238,6 @@ def fit_to_map(xdata, data, pdict):
     nx, ny = pdict["size_px"] # Scan size in pixels
     fitrange = pdict["fitrange"] # Spectral range for the fit
     p0 = pdict["startparams"] # Starting values
-    (thresh_c, thresh_x0, thresh_lw, thresh_lw_std) = pdict["params_thresh"]
     
     # Create arrays to store the fit results
     fitresults = np.zeros((ny,nx,4))          # Array with (b, c, x0, lw) for each x/y-datapoint in which fit was successful
@@ -283,25 +279,9 @@ def fit_to_map(xdata, data, pdict):
                 
                 # Check if any fit results contain NaN values
                 if np.isnan(popt).any() or np.isnan(popt_std).any():
-                    fiterrors[y, x] = "Nan val/std"
+                    fiterrors[y, x] = "NaN"
                     continue
-                
-                # Check if the fit results fall within their respective threshold
-                # intervals.
-                # If not: Change the fiterrors entry to show which parameter(s) 
-                # violated the threshold interval
-                if not thresh_c[0] < popt[1] < thresh_c[1]:
-                    fiterrors[y,x] = "c"
-                    
-                elif not thresh_x0[0] < popt[2] < thresh_x0[1]:
-                    fiterrors[y,x] = "x0"
-                    
-                elif not thresh_lw[0] < popt[3] < thresh_lw[1]:
-                    fiterrors[y,x] = "lw"
-                    
-                elif not thresh_lw_std[0] < popt_std[3] < thresh_lw_std[1]:
-                    fiterrors[y,x] = "lw std"
-                # If yes: Write fit results into result arrays
+                # If not: write best fit parameters into the fitresults
                 else:
                     fitresults[y,x] = popt
                     fitresults_std[y,x] = popt_std
@@ -324,15 +304,25 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
     nx, ny = pdict["size_px"] # Scan size in pixels
     sx, sy = pdict["size_um"] # Scan size in microns
     peakname = pdict["peakname"] # Name of the peak
+    (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
     
-    # Mask the fitresults array in all points where the fit failed
-    # Define the condition for masking
-    mask_condition = fiterrors != 0
-    # Create the mask, expand it to match the shape of fitresults
-    expanded_mask = np.repeat(mask_condition[:, :, np.newaxis], fitresults.shape[2], axis=2)
+    # Conditions to check if the best fit parameters fall into their threshold interval
+    conditions = [
+        (thresh_c[0] > fitresults[:, :, 1]),
+        (fitresults[:, :, 1] > thresh_c[1]),
+        (thresh_x0[0] > fitresults[:, :, 2]),
+        (fitresults[:, :, 2] > thresh_x0[1]),
+        (thresh_lw[0] > fitresults[:, :, 3]),
+        (fitresults[:, :, 3] > thresh_lw[1]),
+        (fiterrors != 0)
+    ]
+    
+    # Create the mask in 2D
+    mask = np.logical_or.reduce(conditions)
+    
     # Apply the mask to fitresults
-    fitresults_ma = np.ma.array(fitresults, mask=expanded_mask)
-        
+    fitresults_ma = np.ma.masked_array(fitresults, mask=np.broadcast_to(mask[:, :, np.newaxis], fitresults.shape))
+
     # The mapped quantities
     quantities = ["intensity", "position", "linewidth"]
     # Their units
@@ -350,6 +340,7 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
         plt.close()
 
     return()
+
 
 """ Apply a moving average window [size (2s+1)*(2s+1)] to a masked 2D array """
 def moving_2D_average(data, s):
@@ -414,7 +405,6 @@ def moving_2D_average(data, s):
                 
     return(data_av)     
 
-    
 
 """ Do the twist angle related maps """
 def map_theta(fitresults, fiterrors, pdict, folder):
@@ -532,6 +522,7 @@ def onclick(event, fitresults, fiterrors, pdict):
                 # Extract required variables from the pdict
                 plotrange = pdict["plotrange"]
                 fitrange = pdict["fitrange"]
+                (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
                 
                 # Find start and stop indices of plotrange and fitrange in spectrum
                 i_plotstart = np.abs(xdata - plotrange[0]).argmin()
@@ -553,14 +544,41 @@ def onclick(event, fitresults, fiterrors, pdict):
                 
                 # Plot the fit if it succeeded in that point
                 if fiterrors[-y_map, x_map] == 0:
-                    ax3.plot(xdata_fit, lorentzian(xdata_fit, *fitresults[-y_map, x_map]), color="tab:red")
+                    ax3.plot(xdata_fit, lorentzian(xdata_fit, *fitresults[-y_map, x_map]), color="tab:orange")
                     ax3.set_xlim(plotrange)
-                    textstr = r"I = %.0f " %(fitresults[-y_map, x_map][1])\
-                        + "\n" + "$\omega$ = %.2f rel. 1/cm" %(fitresults[-y_map, x_map][2])\
-                        + "\n" + "$\Gamma$ = %.2f 1/cm" %(fitresults[-y_map, x_map][3])
-                    ax3.text(0.01, 0.95, textstr, ha='left', va='top', transform=ax3.transAxes)
                     
+                    # Assemble text string with best fit parameters
+                    text_I = r"I = %.0f " %(fitresults[-y_map, x_map][1])
+                    text_x0 = "\n" + "$\omega$ = %.2f rel. 1/cm" %(fitresults[-y_map, x_map][2])
+                    text_lw = "\n" + "$\Gamma$ = %.2f 1/cm" %(fitresults[-y_map, x_map][3])
+                    
+                    # Define conditions to check if the fitresults violate threshold boundaries
+                    cond_c = (thresh_c[0] > fitresults[-y_map, x_map, 1]) or (fitresults[-y_map, x_map, 1] > thresh_c[1])
+                    cond_x0 = (thresh_x0[0] > fitresults[-y_map, x_map, 2]) or (fitresults[-y_map, x_map, 2] > thresh_x0[1])
+                    cond_lw = (thresh_lw[0] > fitresults[-y_map, x_map, 3])  or (fitresults[-y_map, x_map, 3] > thresh_lw[1])
+
+                    # Add information about threshold violations to the string
+                    if cond_c:
+                        ax3.text(0.01, 0.95, text_I, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
+                    else:
+                        ax3.text(0.01, 0.95, text_I, ha='left', va='top', transform=ax3.transAxes)
+                    
+                    if cond_x0:
+                        ax3.text(0.01, 0.94, text_x0, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
+                    else:
+                        ax3.text(0.01, 0.94, text_x0, ha='left', va='top', transform=ax3.transAxes)
+                        
+                    if cond_lw:
+                        ax3.text(0.01, 0.85, text_lw, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
+                    else:
+                        ax3.text(0.01, 0.85, text_lw, ha='left', va='top', transform=ax3.transAxes)
+                        
+                    # Plot the text
+                    #ax3.text(0.01, 0.95, textstr, ha='left', va='top', transform=ax3.transAxes)
+
                 # Update the plot in the window
+                ax3.set_xlabel("Raman shift (rel. 1/cm)")
+                ax3.set_ylabel("CCD counts")
                 ax3.figure.canvas.draw()
                 
             else:
@@ -574,14 +592,24 @@ def make_figure(fitresults, fiterrors, pdict):
     nx, ny = pdict["size_px"] # Scan size in pixels
     sx, sy = pdict["size_um"] # Scan size in microns
     peakname = pdict["peakname"] # Name of the peak
+    (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
     
-    # Mask the fitresults array in all points where the fit failed
-    # Define the condition for masking
-    mask_condition = fiterrors != 0
-    # Create the mask, expand it to match the shape of fitresults
-    expanded_mask = np.repeat(mask_condition[:, :, np.newaxis], fitresults.shape[2], axis=2)
+    # Conditions to check if the best fit parameters fall into their threshold interval
+    conditions = [
+        (thresh_c[0] > fitresults[:, :, 1]),
+        (fitresults[:, :, 1] > thresh_c[1]),
+        (thresh_x0[0] > fitresults[:, :, 2]),
+        (fitresults[:, :, 2] > thresh_x0[1]),
+        (thresh_lw[0] > fitresults[:, :, 3]),
+        (fitresults[:, :, 3] > thresh_lw[1]),
+        (fiterrors != 0)
+    ]
+    
+    # Create the mask in 2D
+    mask = np.logical_or.reduce(conditions)
+    
     # Apply the mask to fitresults
-    fitresults_ma = np.ma.array(fitresults, mask=expanded_mask)
+    fitresults_ma = np.ma.masked_array(fitresults, mask=np.broadcast_to(mask[:, :, np.newaxis], fitresults.shape))
     
     # Build the figure with grid and subplots
     fig = plt.figure(figsize = (15, 10))
@@ -603,6 +631,8 @@ def make_figure(fitresults, fiterrors, pdict):
     ax1.set_ylabel("µm")
     ax2.set_xlabel("µm")
     ax2.set_ylabel("µm")
+    ax3.set_xlabel("Raman shift (rel. 1/cm)")
+    ax3.set_ylabel("CCD counts")
     
     # Add colorbars
     plt.colorbar(im0, ax=ax0, label="Intensity (arb. u.)")   
@@ -640,7 +670,7 @@ dict_TA["size_um"] = size_um
 dict_TA["peakname"] = "TA"
 dict_TA["fitrange"] = (240, 290)             # Data range for fitting
 dict_TA["plotrange"] = (220, 310)            # Data range for plotting
-dict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw, thresh_TA_lw_std)
+dict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw)
 dict_TA["max_gradient"] = max_gradient
 save_object(folder, dict_TA, "dict_TA")
 
@@ -654,7 +684,7 @@ dict_G["size_um"] = size_um
 dict_G["peakname"] = "G"
 dict_G["fitrange"] = (1500, 1610)             # Data range for fitting
 dict_G["plotrange"] = (1500, 1800)            # Data range for plotting
-dict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw, thresh_G_lw_std)
+dict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
 save_object(folder, dict_G, "dict_G")
 
 # The first two lines check if the peak dictionary already exists and create
@@ -667,7 +697,7 @@ dict_LO["size_um"] = size_um
 dict_LO["peakname"] = "LO"
 dict_LO["fitrange"] = (1610, 1800)             # Data range for fitting
 dict_LO["plotrange"] = (1500, 1800)            # Data range for plotting
-dict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw, thresh_LO_lw_std)
+dict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
 save_object(folder, dict_LO, "dict_LO")
 
 # The first two lines check if the peak dictionary already exists and create
@@ -680,7 +710,7 @@ dict_2D["size_um"] = size_um
 dict_2D["peakname"] = "2D"
 dict_2D["fitrange"] = (2600, 2800)             # Data range for fitting
 dict_2D["plotrange"] = (2400, 2900)            # Data range for plotting
-dict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw, thresh_2D_lw_std)
+dict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
 save_object(folder, dict_2D, "dict_2D")
 
 
@@ -696,6 +726,10 @@ save_object(folder, dict_2D, "dict_2D")
 # 4.4 Perform the actual fitting and mapping
 ###############################################################################
 
+# Create lists that are needed to locate the index coordinates of a click event
+xaxis = np.linspace(0, size_um[0], size_px[0])
+yaxis = np.linspace(0, size_um[1], size_px[1]) 
+
 # Fitting
 if b_fit_TA == True:
     fitresults_TA, fitresults_std_TA, fiterrors_TA = fit_to_map(xdata, data, dict_TA)
@@ -709,7 +743,7 @@ if b_fit_2D == True:
 # Save maps, open interactive figures
 if b_map_TA == True:
     map_lorentz_parameters(fitresults_TA, fiterrors_TA, dict_TA, folder)
-    map_theta(fitresults_TA, fiterrors_TA, dict_TA, folder)
+    #map_theta(fitresults_TA, fiterrors_TA, dict_TA, folder)
     ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, dict_TA)
 if b_map_G == True:
     map_lorentz_parameters(fitresults_G, fiterrors_G, dict_G, folder)
@@ -721,9 +755,5 @@ if b_map_2D == True:
     map_lorentz_parameters(fitresults_2D, fiterrors_2D, dict_2D, folder)
     ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, dict_2D)
 
-
-# Create lists that are needed to locate the index coordinates of a click event
-xaxis = np.linspace(0, size_um[0], size_px[0])
-yaxis = np.linspace(0, size_um[1], size_px[1]) 
     
     

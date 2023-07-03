@@ -80,17 +80,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/ETIRF04-100/G+2D+LO" 
+folder = "/Users/Aaron/Desktop/ETIRF04-123" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "ETIRF04-100_G_LO_2D.txt" 
+file = "ETIRF04-123_Rprime.txt" 
 
 # In 1/cm, a spectral range without any features. This is used to calculate 
 # the mean background noise which is subtracted from the data
 spectral_mean_range = (2000, 2100) 
 
-size_px = (50, 40)    # Size of the Scan in pixels
-size_um = (87, 59)        # Size of the Scan in µm
+size_px = (126, 123)       # Size of the Scan in pixels
+size_um = (42, 41)        # Size of the Scan in µm
 
 # What peaks shall be fitted?
 b_fit_TA = False
@@ -99,11 +99,10 @@ b_fit_LO = False
 b_fit_2D = False
 
 # What peaks shall be mapped?
-b_export_map_TA = False
-b_export_map_G = True
-b_export_map_LO = True
-b_export_map_2D = True
-
+b_map_TA = False
+b_map_G = True
+b_map_LO = False
+b_map_2D = False
 
 
 ###############################################################################
@@ -124,11 +123,11 @@ startparams_2D = [0, 2E4, 15]
 #       threshold intervals. If any parameter lies outside of its threshold
 #       interval, the corresponding data point is excluded from the map.
 
-thresh_TA_c = [20, 6000]      # Intensity
-thresh_TA_x0 = [250, 275]     # Position
-thresh_TA_lw = [0.2, 9]       # Linewidth
+thresh_TA_c = [20, 6000]         # Intensity
+thresh_TA_x0 = [250, 275]   # Position
+thresh_TA_lw = [0.2, 9]         # Linewidth
 
-thresh_G_c = [1E3, 1E15]      # Intensity
+thresh_G_c = [1E3, 1E15]       # Intensity
 thresh_G_x0 = [1577, 1587]    # Position
 thresh_G_lw = [4, 25]         # Linewidth
 
@@ -331,8 +330,6 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
     
     # In a loop, plot peak intensity, position and linewidth
     for i in range(3):
-        # The first plt.close() avoids funny interactions with the interactive plot
-        plt.close()
         # In this line, i = i+1 to skip the first parameter which is the offset
         im = plt.imshow(fitresults_ma[:,:,i+1], extent = [0, sx, 0, sy], cmap="gist_rainbow")
         plt.xlabel("µm")
@@ -735,7 +732,9 @@ save_object(folder, dict_2D, "dict_2D")
 # 4.3 Read the Raman scan data
 ###############################################################################
 
-xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
+#xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
+#save_object(folder, xdata, "xdata")
+
 
 ###############################################################################
 # 4.4 Perform the actual fitting and mapping

@@ -17,11 +17,9 @@ Next step:
 At all times, there is one peak instance for TA, G, LO and 2D.
 The peak selected in the dropdown menu needs to act as a kind of condition that 
 defines on which peak instance all the other actions (set default values, fit, map)
-are performed.
-
-    
-    
+are performed.  
 """
+
 import sys
 import numpy as np
 
@@ -32,8 +30,6 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import default_values
 
 
-
-
 ###############################################################################
 """ The main window """
 ###############################################################################
@@ -42,21 +38,13 @@ import default_values
 # "Main Window" when selecting the form type when first creating the .ui file 
 # in PyQt Designer
 class GUI(QMainWindow):
+    
     # Define instances of pyqtSignal for all buttons that emit a signal
     import_scan_button_clicked = pyqtSignal()
-    default_values_button_clicked = pyqtSignal()
 
-    def __init__(self, peaks):
+    def __init__(self):
         # Call the inherited classes __init__ method
         super(GUI, self).__init__() 
-        
-        # Introduce the list of peak class instances as attribute of the GUI,
-        # one entry per peak (TA, G, LO, 2D)
-        self.peaks = peaks
-        
-        # Introduce the list of peak dictionaries as attribute of the GUI,
-        # one entry per peak (TA, G, LO, 2D)
-        self.pdicts = default_values.get_dicts()
         
         # Load the .ui file
         uic.loadUi('gui.ui', self) 
@@ -64,29 +52,54 @@ class GUI(QMainWindow):
         # Connect the GUI input elements to attributes of this class
         self.input_min_mean_range = self.findChild(QLineEdit, 'in_min_mean_range')
         self.input_max_mean_range = self.findChild(QLineEdit, 'in_max_mean_range')
+        
         self.input_sx_px = self.findChild(QLineEdit, 'in_sx_px')
         self.input_sy_px = self.findChild(QLineEdit, 'in_sy_px')
         self.input_sx_mu = self.findChild(QLineEdit, 'in_sx_mu')
         self.input_sy_mu = self.findChild(QLineEdit, 'in_sy_mu')
         
+        self.input_init_int = self.findChild(QLineEdit, 'in_init_int')
+        self.input_init_lw = self.findChild(QLineEdit, 'in_init_lw')
+        self.input_min_int = self.findChild(QLineEdit, 'in_min_int')
+        self.input_max_int = self.findChild(QLineEdit, 'in_max_int')
+        self.input_min_pos = self.findChild(QLineEdit, 'in_min_pos')
+        self.input_max_pos = self.findChild(QLineEdit, 'in_max_pos')
+        self.input_min_lw = self.findChild(QLineEdit, 'in_min_lw')
+        self.input_max_lw = self.findChild(QLineEdit, 'in_max_lw')
+
         # Make the "Import Raman scan" button emit a signal 
         self.import_scan_button = self.findChild(QPushButton, 'b_import_scan')
         self.import_scan_button.clicked.connect(self.import_scan_button_clicked.emit)
         
-        # Make the peak dropdown menu emit a signal
+        # Connect peak dropdown menu to an attribute of this class
         self.which_peak = self.findChild(QComboBox, 'in_peak')
-        self.which_peak.currentIndexChanged.connect(self.set_selected_peak)
         
         # Make the "Use default values" button emit a signal
         self.default_values_button = self.findChild(QPushButton, 'b_default_values')
-        self.default_values_button.clicked.connect(self.default_values_button_clicked.emit)
+        self.default_values_button.clicked.connect(self.set_default_values)
                 
         # Show the GUI
-        self.show() 
+        self.show()
     
-    def set_selected_peak(self, index):
-        selected_peak = self.peaks[index]
-
+    # Upon button click, set default values in the lineEdits
+    #@pyqtSlot()
+    def set_default_values(self):
+        selected_peak = peaks[self.which_peak.currentIndex()]
+        # Convert float to string
+        self.input_init_int.setText(str(selected_peak.init_int))
+        self.input_init_lw.setText(str(selected_peak.init_lw))
+        
+        self.input_min_int.setText(str(selected_peak.min_int))
+        self.input_max_int.setText(str(selected_peak.max_int))
+        
+        self.input_min_pos.setText(str(selected_peak.min_pos))
+        self.input_max_pos.setText(str(selected_peak.max_pos))
+        
+        self.input_min_lw.setText(str(selected_peak.min_lw))
+        self.input_max_lw.setText(str(selected_peak.max_lw))
+        
+    
+        
 
 
 ###############################################################################
@@ -157,9 +170,6 @@ class file_import(QObject):
             self.xdata = np.asarray(xlist)
 
 
-
-
-
 ###############################################################################
 """ A class to be called for each new peak that is fitted """
 ###############################################################################
@@ -167,26 +177,20 @@ class peak:
     
     # The peak instance is passed the peak's pdict when creating it
     def __init__(self, pdict):
-        # Introduce pdict as attribute
-        self.pdict = pdict
+        # Set initial and threshold values as attributes of the peak instance
+        self.init_int = pdict["init_values"][1]
+        self.init_lw = pdict["init_values"][3]
+        self.min_int = pdict["min_values"][0]
+        self.max_int = pdict["max_values"][0]
+        self.min_pos = pdict["min_values"][1]
+        self.max_pos = pdict["max_values"][1]
+        self.min_lw = pdict["min_values"][2]
+        self.max_lw = pdict["max_values"][2]
     
-    # A method that is called whenever a peak is selected in the dropdown menu
-    # and copies the default values for initial values and threshold intervals
-    # into the current instance of the GUI
-    @pyqtSlot()
-    def use_default_values(self, index):
-        # Get initial values
-        self.p0 = self.pdict["initvalues"]
-        # Get threshold values
-        self.params_thresh = self.pdict["params_thresh"]
-        
-        # Display them in the GUI
+    #def use_default_values(self, index):
         
         
         
-
-
-    
 ###############################################################################
 """ Run the code """
 ###############################################################################
@@ -195,13 +199,14 @@ if __name__ == '__main__':
     # Create an instance of QtWidgets.QApplication
     app = QtWidgets.QApplication(sys.argv) 
     
-    # Initialise one instance of the peak class for each Raman peak
-    # Storing them in a list makes it easier to switch between peaks as the 
-    # user selects them via the dropdown menu
-    peaks = [peak(default_values.TA()), peak(default_values.G()), peak(default_values.LO()), peak(default_values.TwoD())]
-    
     # Create an instance of the GUI
-    window = GUI(peaks) 
+    window = GUI() 
+    
+    # Introduce a list of peak class instances,
+    # one entry per peak (TA, G, LO, 2D)
+    # Storing them in a list makes it easier to switch between peaks as the 
+    # user selects them via the dropdown menu        
+    peaks = [peak(default_values.TA()), peak(default_values.G()), peak(default_values.LO()), peak(default_values.TwoD())]
     
     # Create an instance of the file import class
     file_importer = file_import()
@@ -209,7 +214,6 @@ if __name__ == '__main__':
     # Connect signals emitted by buttons to their respective methods in other
     # classes
     window.import_scan_button_clicked.connect(file_importer.scan)
-    window.default_values_button_clicked.connect(peak.use_default_values)
     
     # Start the application
     sys.exit(app.exec_())

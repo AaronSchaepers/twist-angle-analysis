@@ -99,10 +99,10 @@ b_fit_LO = False
 b_fit_2D = False
 
 # What peaks shall be mapped?
-b_export_map_TA = False
-b_export_map_G = True
-b_export_map_LO = True
-b_export_map_2D = True
+b_map_TA = False
+b_map_G = True
+b_map_LO = True
+b_map_2D = True
 
 
 

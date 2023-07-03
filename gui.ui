@@ -299,7 +299,7 @@
      <rect>
       <x>90</x>
       <y>350</y>
-      <width>41</width>
+      <width>101</width>
       <height>21</height>
      </rect>
     </property>
@@ -309,7 +309,7 @@
      <rect>
       <x>90</x>
       <y>370</y>
-      <width>41</width>
+      <width>101</width>
       <height>21</height>
      </rect>
     </property>
@@ -317,7 +317,7 @@
    <widget class="QLabel" name="l_unit5">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>210</x>
       <y>370</y>
       <width>60</width>
       <height>16</height>
@@ -330,7 +330,7 @@
    <widget class="QLabel" name="l_unit3">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>210</x>
       <y>350</y>
       <width>60</width>
       <height>16</height>
@@ -364,7 +364,7 @@
      <rect>
       <x>90</x>
       <y>440</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>
@@ -374,7 +374,7 @@
      <rect>
       <x>90</x>
       <y>460</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>
@@ -408,7 +408,7 @@
    <widget class="QLabel" name="l_unit6">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>210</x>
       <y>440</y>
       <width>60</width>
       <height>16</height>
@@ -423,7 +423,7 @@
      <rect>
       <x>90</x>
       <y>480</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>
@@ -431,7 +431,7 @@
    <widget class="QLabel" name="l_unit7">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>210</x>
       <y>460</y>
       <width>60</width>
       <height>16</height>
@@ -444,7 +444,7 @@
    <widget class="QLabel" name="l_unit8">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>210</x>
       <y>480</y>
       <width>60</width>
       <height>16</height>
@@ -496,9 +496,9 @@
    <widget class="QLineEdit" name="in_max_int">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>150</x>
       <y>440</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>
@@ -506,9 +506,9 @@
    <widget class="QLineEdit" name="in_max_lw">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>150</x>
       <y>480</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>
@@ -516,9 +516,9 @@
    <widget class="QLineEdit" name="in_max_pos">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>150</x>
       <y>460</y>
-      <width>41</width>
+      <width>51</width>
       <height>21</height>
      </rect>
     </property>

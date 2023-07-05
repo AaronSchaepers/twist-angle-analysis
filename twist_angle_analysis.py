@@ -100,9 +100,9 @@ b_fit_2D = False
 
 # What peaks shall be mapped?
 b_map_TA = False
-b_map_G = True
-b_map_LO = True
-b_map_2D = True
+b_map_G = False
+b_map_LO = False
+b_map_2D = False
 
 
 
@@ -464,7 +464,7 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     
     # Apply mask to fitresults and fill masked entries with 0 because interpl1d
     # does not accept masked arrays as an input
-    fitresults_0 = np.ma.masked_array(fitresults, mask[..., np.newaxis], fill_value=0)
+    fitresults_0 = np.ma.masked_array(fitresults, mask=np.broadcast_to(mask[:, :, np.newaxis], fitresults.shape), fill_value=0)
     
     # Calculate the twist angle array
     theta = TA_position_to_theta(fitresults_0[:,:,2])

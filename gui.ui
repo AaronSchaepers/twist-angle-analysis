@@ -299,7 +299,7 @@
      <rect>
       <x>90</x>
       <y>350</y>
-      <width>101</width>
+      <width>121</width>
       <height>21</height>
      </rect>
     </property>
@@ -309,7 +309,7 @@
      <rect>
       <x>90</x>
       <y>370</y>
-      <width>101</width>
+      <width>121</width>
       <height>21</height>
      </rect>
     </property>
@@ -317,7 +317,7 @@
    <widget class="QLabel" name="l_unit5">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>230</x>
       <y>370</y>
       <width>60</width>
       <height>16</height>
@@ -330,7 +330,7 @@
    <widget class="QLabel" name="l_unit3">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>230</x>
       <y>350</y>
       <width>60</width>
       <height>16</height>
@@ -408,7 +408,7 @@
    <widget class="QLabel" name="l_unit6">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>230</x>
       <y>440</y>
       <width>60</width>
       <height>16</height>
@@ -431,7 +431,7 @@
    <widget class="QLabel" name="l_unit7">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>230</x>
       <y>460</y>
       <width>60</width>
       <height>16</height>
@@ -444,7 +444,7 @@
    <widget class="QLabel" name="l_unit8">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>230</x>
       <y>480</y>
       <width>60</width>
       <height>16</height>
@@ -498,7 +498,7 @@
      <rect>
       <x>150</x>
       <y>440</y>
-      <width>51</width>
+      <width>71</width>
       <height>21</height>
      </rect>
     </property>
@@ -508,7 +508,7 @@
      <rect>
       <x>150</x>
       <y>480</y>
-      <width>51</width>
+      <width>71</width>
       <height>21</height>
      </rect>
     </property>
@@ -518,7 +518,7 @@
      <rect>
       <x>150</x>
       <y>460</y>
-      <width>51</width>
+      <width>71</width>
       <height>21</height>
      </rect>
     </property>
@@ -526,7 +526,7 @@
    <widget class="QPushButton" name="b_start_fit">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>40</x>
       <y>580</y>
       <width>221</width>
       <height>32</height>
@@ -539,7 +539,7 @@
    <widget class="QPushButton" name="b_save_fit">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>40</x>
       <y>620</y>
       <width>221</width>
       <height>32</height>
@@ -554,7 +554,7 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>261</width>
+      <width>281</width>
       <height>191</height>
      </rect>
     </property>
@@ -567,60 +567,12 @@
      <rect>
       <x>10</x>
       <y>270</y>
-      <width>261</width>
+      <width>281</width>
       <height>281</height>
      </rect>
     </property>
     <property name="title">
      <string>Peak details</string>
-    </property>
-   </widget>
-   <widget class="PlotWidget" name="frame_int">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>20</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
-   <widget class="PlotWidget" name="frame_lw">
-    <property name="geometry">
-     <rect>
-      <x>980</x>
-      <y>20</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
-   <widget class="PlotWidget" name="frame_pos">
-    <property name="geometry">
-     <rect>
-      <x>650</x>
-      <y>20</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
     </property>
    </widget>
    <widget class="QPushButton" name="b_save_plot">
@@ -634,38 +586,6 @@
     </property>
     <property name="text">
      <string>Save plot</string>
-    </property>
-   </widget>
-   <widget class="PlotWidget" name="frame_theta">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>380</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
-   <widget class="PlotWidget" name="frame_grad_theta">
-    <property name="geometry">
-     <rect>
-      <x>650</x>
-      <y>380</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
     </property>
    </widget>
    <widget class="QLabel" name="l_int3">
@@ -746,22 +666,6 @@
      <string>Aaron Schäpers, 2023</string>
     </property>
    </widget>
-   <widget class="PlotWidget" name="frame">
-    <property name="geometry">
-     <rect>
-      <x>980</x>
-      <y>380</y>
-      <width>291</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
@@ -830,7 +734,7 @@
    <widget class="QPushButton" name="b_import_scan">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>40</x>
       <y>210</y>
       <width>221</width>
       <height>32</height>
@@ -843,7 +747,7 @@
    <widget class="QPushButton" name="b_import_fit">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>40</x>
       <y>660</y>
       <width>221</width>
       <height>32</height>
@@ -864,6 +768,66 @@
     </property>
     <property name="text">
      <string>Use default values</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_int">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>20</y>
+      <width>291</width>
+      <height>311</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_pos">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>20</y>
+      <width>291</width>
+      <height>311</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_lw">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>20</y>
+      <width>281</width>
+      <height>311</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_theta">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>390</y>
+      <width>281</width>
+      <height>301</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_grad_theta">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>390</y>
+      <width>281</width>
+      <height>301</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view_spectrum">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>390</y>
+      <width>281</width>
+      <height>301</height>
+     </rect>
     </property>
    </widget>
    <zorder>box_scan</zorder>
@@ -909,19 +873,13 @@
    <zorder>in_max_pos</zorder>
    <zorder>b_start_fit</zorder>
    <zorder>b_save_fit</zorder>
-   <zorder>frame_int</zorder>
-   <zorder>frame_lw</zorder>
-   <zorder>frame_pos</zorder>
    <zorder>b_save_plot</zorder>
-   <zorder>frame_theta</zorder>
-   <zorder>frame_grad_theta</zorder>
    <zorder>l_int3</zorder>
    <zorder>l_pos3</zorder>
    <zorder>l_lw3</zorder>
    <zorder>l_twistangle</zorder>
    <zorder>l_twistanglegrad</zorder>
    <zorder>label</zorder>
-   <zorder>frame</zorder>
    <zorder>label_2</zorder>
    <zorder>pushButton_2</zorder>
    <zorder>pushButton_3</zorder>
@@ -930,6 +888,12 @@
    <zorder>b_import_scan</zorder>
    <zorder>b_import_fit</zorder>
    <zorder>b_default_values</zorder>
+   <zorder>view_int</zorder>
+   <zorder>view_pos</zorder>
+   <zorder>view_lw</zorder>
+   <zorder>view_theta</zorder>
+   <zorder>view_grad_theta</zorder>
+   <zorder>view_spectrum</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -943,14 +907,6 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>PlotWidget</class>
-   <extends>QFrame</extends>
-   <header>pyqtgraph</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

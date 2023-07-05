@@ -80,17 +80,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/ETIRF04-100/G+2D+LO" 
+folder = "/Users/Aaron/Desktop/Code/Test_data" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "ETIRF04-100_G_LO_2D.txt" 
+file = "test_data(100x100).txt" 
 
 # In 1/cm, a spectral range without any features. This is used to calculate 
 # the mean background noise which is subtracted from the data
-spectral_mean_range = (2000, 2100) 
+spectral_mean_range = (300, 350) 
 
-size_px = (50, 40)    # Size of the Scan in pixels
-size_um = (87, 59)        # Size of the Scan in µm
+size_px = (100, 100)    # Size of the Scan in pixels
+size_um = (7, 7)        # Size of the Scan in µm
 
 # What peaks shall be fitted?
 b_fit_TA = False
@@ -99,7 +99,7 @@ b_fit_LO = False
 b_fit_2D = False
 
 # What peaks shall be mapped?
-b_map_TA = False
+b_map_TA = True
 b_map_G = False
 b_map_LO = False
 b_map_2D = False
@@ -448,6 +448,9 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     sx, sy = pdict["size_um"] # Scan size in microns
     (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
     
+    # Calculate the twist angle array
+    theta = TA_position_to_theta(fitresults[:,:,2])
+    
     # Conditions to check if the best fit parameters fall into their threshold interval
     conditions = [
         (thresh_c[0] > fitresults[:, :, 1]),
@@ -459,15 +462,8 @@ def map_theta(fitresults, fiterrors, pdict, folder):
         (fiterrors != 0)
     ]
     
-    # Create the mask in 2D
+    # Create the mask
     mask = np.logical_or.reduce(conditions)
-    
-    # Apply mask to fitresults and fill masked entries with 0 because interpl1d
-    # does not accept masked arrays as an input
-    fitresults_0 = np.ma.masked_array(fitresults, mask=np.broadcast_to(mask[:, :, np.newaxis], fitresults.shape), fill_value=0)
-    
-    # Calculate the twist angle array
-    theta = TA_position_to_theta(fitresults_0[:,:,2])
     
     # Apply the mask to theta
     theta_ma = np.ma.masked_array(theta, mask=mask)
@@ -735,7 +731,7 @@ save_object(folder, dict_2D, "dict_2D")
 # 4.3 Read the Raman scan data
 ###############################################################################
 
-xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
+#xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
 
 ###############################################################################
 # 4.4 Perform the actual fitting and mapping

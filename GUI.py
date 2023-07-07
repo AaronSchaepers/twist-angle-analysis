@@ -27,7 +27,7 @@ import numpy as np
 import pyqtgraph as pg
 import module as mod
 
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtGui, QtCore
 from PyQt5.QtWidgets import QFileDialog, QLineEdit, QPushButton, QComboBox, QMainWindow, QGraphicsView, QGraphicsItem
 
 
@@ -48,12 +48,12 @@ class GUI(QMainWindow):
         uic.loadUi('gui.ui', self) 
         
         # Connect the plot frames to attributes of this class
-        self.view_int = self.findChild(QGraphicsView, 'view_int')
-        self.view_pos = self.findChild(QGraphicsView, 'view_pos')
-        self.view_lw = self.findChild(QGraphicsView, 'view_lw')
-        self.view_theta = self.findChild(QGraphicsView, 'view_theta')
-        self.view_grad_theta = self.findChild(QGraphicsView, 'view_grad_theta')
-        self.view_spectrum = self.findChild(QGraphicsView, 'view_spectrum')
+        self.frame_int = self.findChild(pg.ImageView, 'frame_int')
+        self.frame_pos = self.findChild(pg.ImageView, 'frame_pos')
+        self.frame_lw = self.findChild(pg.ImageView, 'frame_lw')
+        self.frame_theta = self.findChild(pg.ImageView, 'frame_theta')
+        self.frame_grad_theta = self.findChild(pg.ImageView, 'frame_grad_theta')
+        self.frame_spectrum = self.findChild(pg.ImageView, 'frame_spectrum')
         
         # Connect the GUI input elements to attributes of this class
         self.input_min_mean_range = self.findChild(QLineEdit, 'in_min_mean_range')
@@ -253,24 +253,38 @@ class peak:
         
     # Plot the results    
     def plot_maps(self, window):
+        # Get the QGraphicsView objects from the GUI class
+        print(window)
+        print(window.frame_int)
+        print(window.frame_int.scene)
+        window.frame_int.setImage(self.fitresults[:,:,1])
+        window.frame_pos.setImage(self.fitresults[:,:,2])
+        window.frame_lw.setImage(self.fitresults[:,:,3])
+
         
-        # Create one instance of the ImageView widget for each plot
-        map_int = pg.ImageView()
-        map_pos = pg.ImageView()
-        map_lw = pg.ImageView()
         
-        # Connect them to the corresponding canvas in the GUI instance
-        window.view_int.setCentralItem(map_int)
-        window.view_pos.setCentralItem(map_pos)
-        window.view_lw.setCentralItem(map_lw)
-        
-        # Display the image data
-        window.view_int.setCentralItem(map_int)
-        map_int.setImage(self.fitresults[:,:,1])
-        map_pos.setImage(self.fitresults[:,:,2])
-        map_lw.setImage(self.fitresults[:,:,3])
-        
-    
+
+# =============================================================================
+#         # Create QGraphicsPixmapItems from the fit results arrays
+#         pixmap_int = QtGui.QPixmap.fromImage(QtGui.QImage(self.fitresults[:, :, 1].data, self.fitresults.shape[0], self.fitresults.shape[1], QtGui.QImage.Format_Grayscale8))
+#         pixmap_pos = QtGui.QPixmap.fromImage(QtGui.QImage(self.fitresults[:, :, 2].data, self.fitresults.shape[0], self.fitresults.shape[1], QtGui.QImage.Format_Grayscale8))
+#         pixmap_lw = QtGui.QPixmap.fromImage(QtGui.QImage(self.fitresults[:, :, 3].data, self.fitresults.shape[0], self.fitresults.shape[1], QtGui.QImage.Format_Grayscale8))
+# 
+#         # Create QGraphicsItems from the QGraphicsPixmapItems
+#         item_int = QtWidgets.QGraphicsPixmapItem(pixmap_int)
+#         item_pos = QtWidgets.QGraphicsPixmapItem(pixmap_pos)
+#         item_lw = QtWidgets.QGraphicsPixmapItem(pixmap_lw)
+# 
+#         # Add the QGraphicsItems to the QGraphicsScene of the QGraphicsView widgets
+#         view_int.scene().addItem(item_int)
+#         view_pos.scene().addItem(item_pos)
+#         view_lw.scene().addItem(item_lw)
+# 
+#         # Fit the QGraphicsView to the contents
+#         view_int.fitInView(item_int, QtCore.Qt.KeepAspectRatio)
+#         view_pos.fitInView(item_pos, QtCore.Qt.KeepAspectRatio)
+#         view_lw.fitInView(item_lw, QtCore.Qt.KeepAspectRatio)
+# =============================================================================
         
     
         

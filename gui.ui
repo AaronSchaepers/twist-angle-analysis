@@ -770,27 +770,27 @@
      <string>Use default values</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_int">
+   <widget class="ImageView" name="frame_int" native="true">
     <property name="geometry">
      <rect>
       <x>320</x>
       <y>20</y>
-      <width>291</width>
+      <width>281</width>
       <height>311</height>
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_pos">
+   <widget class="ImageView" name="frame_pos" native="true">
     <property name="geometry">
      <rect>
       <x>650</x>
       <y>20</y>
-      <width>291</width>
+      <width>281</width>
       <height>311</height>
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_lw">
+   <widget class="ImageView" name="frame_lw" native="true">
     <property name="geometry">
      <rect>
       <x>980</x>
@@ -800,33 +800,33 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_theta">
+   <widget class="ImageView" name="frame_theta" native="true">
     <property name="geometry">
      <rect>
       <x>320</x>
-      <y>390</y>
+      <y>380</y>
       <width>281</width>
-      <height>301</height>
+      <height>311</height>
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_grad_theta">
+   <widget class="ImageView" name="frame_grad_theta" native="true">
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>390</y>
+      <y>380</y>
       <width>281</width>
-      <height>301</height>
+      <height>311</height>
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="view_spectrum">
+   <widget class="ImageView" name="frame_spectrum" native="true">
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>390</y>
+      <y>380</y>
       <width>281</width>
-      <height>301</height>
+      <height>311</height>
      </rect>
     </property>
    </widget>
@@ -888,12 +888,12 @@
    <zorder>b_import_scan</zorder>
    <zorder>b_import_fit</zorder>
    <zorder>b_default_values</zorder>
-   <zorder>view_int</zorder>
-   <zorder>view_pos</zorder>
-   <zorder>view_lw</zorder>
-   <zorder>view_theta</zorder>
-   <zorder>view_grad_theta</zorder>
-   <zorder>view_spectrum</zorder>
+   <zorder>frame_int</zorder>
+   <zorder>frame_pos</zorder>
+   <zorder>frame_lw</zorder>
+   <zorder>frame_theta</zorder>
+   <zorder>frame_grad_theta</zorder>
+   <zorder>frame_spectrum</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -907,6 +907,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageView</class>
+   <extends>QWidget</extends>
+   <header>pyqtgraph</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

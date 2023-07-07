@@ -83,7 +83,7 @@ a = 0.246 # Graphene lattice constant in nm
 folder = "/Users/Aaron/Desktop/Code/Test_data" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "test_data(100x100).txt" 
+file = "test_data_100x100.txt" 
 
 # In 1/cm, a spectral range without any features. This is used to calculate 
 # the mean background noise which is subtracted from the data
@@ -448,8 +448,12 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     sx, sy = pdict["size_um"] # Scan size in microns
     (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
     
+    # Create an array of TA position values where all values above the 
+    # interpolation range maximum (748 1/cm) are replaced by a dummy value of 0
+    posTA_cutoff = np.where(fitresults[:,:,2] > 748, 0, fitresults[:,:,2])
+    
     # Calculate the twist angle array
-    theta = TA_position_to_theta(fitresults[:,:,2])
+    theta = TA_position_to_theta(posTA_cutoff)
     
     # Conditions to check if the best fit parameters fall into their threshold interval
     conditions = [

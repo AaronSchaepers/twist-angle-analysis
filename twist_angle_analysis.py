@@ -735,7 +735,7 @@ save_object(folder, dict_2D, "dict_2D")
 # 4.3 Read the Raman scan data
 ###############################################################################
 
-#xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
+xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
 
 ###############################################################################
 # 4.4 Perform the actual fitting and mapping

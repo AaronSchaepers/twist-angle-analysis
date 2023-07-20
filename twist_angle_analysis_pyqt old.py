@@ -7,7 +7,6 @@
 
 
 IDEAS
-    - Make range of color scale accessible to the user
     - Use the threshold dynamically in the interactive plot
     - Make one interactive map per peak 
     - Disable intensity threshold, at least upper bound, because the max int 
@@ -66,8 +65,7 @@ HOW TO USE THIS CODE
 
 import pickle
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import pyqtgraph as pg
 
 from numpy import pi, arcsin, sqrt
 from scipy.optimize import curve_fit
@@ -81,17 +79,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/Code/Test_data" 
+folder = "/Users/Aaron/Desktop/ETIRF04-100/G+2D+LO" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "test_data_100x100.txt" 
+file = "ETIRF04-100_G_LO_2D.txt" 
 
 # In 1/cm, a spectral range without any features. This is used to calculate 
 # the mean background noise which is subtracted from the data
-spectral_mean_range = (300, 350) 
+spectral_mean_range = (2000, 2100) 
 
-size_px = (100, 100)    # Size of the Scan in pixels
-size_um = (7, 7)        # Size of the Scan in µm
+size_px = (50, 40)    # Size of the Scan in pixels
+size_um = (87, 59)        # Size of the Scan in µm
 
 # What peaks shall be fitted?
 b_fit_TA = False
@@ -100,10 +98,11 @@ b_fit_LO = False
 b_fit_2D = False
 
 # What peaks shall be mapped?
-b_map_TA = True
-b_map_G = False
+b_map_TA = False
+b_map_G = True
 b_map_LO = False
 b_map_2D = False
+
 
 
 ###############################################################################
@@ -113,10 +112,10 @@ b_map_2D = False
 # Starting parameters for Lorentzian peak fits in the order:
 # Offset, intensity, linewidth.
 # The starting value for the position is determined dynamically
-startparams_TA = [0, 250, 4]
-startparams_G = [0, 1E4, 32]
-startparams_LO = [0, 5E3, 8]
-startparams_2D = [0, 2E4, 30]
+startparams_TA = [0, 250, 2]
+startparams_G = [0, 1E4, 16]
+startparams_LO = [0, 5E3, 4]
+startparams_2D = [0, 2E4, 15]
 
 # Threshold parameters for excluding implausible fit results
 # NOTE: These are not boundary values for the fitting routine!
@@ -126,39 +125,22 @@ startparams_2D = [0, 2E4, 30]
 
 thresh_TA_c = [20, 6000]      # Intensity
 thresh_TA_x0 = [250, 275]     # Position
-thresh_TA_lw = [0.4, 18]       # Linewidth
+thresh_TA_lw = [0.2, 9]       # Linewidth
 
 thresh_G_c = [1E3, 1E15]      # Intensity
 thresh_G_x0 = [1577, 1587]    # Position
-thresh_G_lw = [8, 50]         # Linewidth
+thresh_G_lw = [4, 25]         # Linewidth
 
 thresh_LO_c = [300, 1E5]      # Intensity
 thresh_LO_x0 = [1610, 1630]   # Position
-thresh_LO_lw = [0.8, 30]      # Linewidth
+thresh_LO_lw = [0.4, 15]      # Linewidth
 
 thresh_2D_c = [1E3, 1E7]      # Intensity
 thresh_2D_x0 = [2650, 2700]   # Position
-thresh_2D_lw = [16, 60]        # Linewidth
+thresh_2D_lw = [8, 30]        # Linewidth
 
 max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  #       values will be excluded from the map.
-                 
-# Colorbar ranges for all mapped parameters in the form (minimum, maximum).
-# If left blank, no colorscale range will be specified in the respective plot.
-crange_TA_int = ()
-crange_TA_pos = ()
-crange_TA_lw = ()
-crange_G_int = ()
-crange_G_pos = ()
-crange_G_lw = ()
-crange_LO_int = ()
-crange_LO_pos = ()
-crange_LO_lw = ()
-crange_2D_int = ()
-crange_2D_pos = ()
-crange_2D_lw = ()
-crange_theta = ()
-crange_grad_theta = ()
 
 
 ###############################################################################
@@ -234,7 +216,7 @@ def read_raman_scan(folder, file, size_px, spectral_mean_range):
 
 """ Lorentzian as used in spectroscopy """
 def lorentzian(x, b, c, x0, lw):
-   f = b + c / pi * (lw/2) / ((x-x0)**2 + (lw/2)**2)
+   f = b + c / pi * lw / ((x-x0)**2 + lw**2)
    return(f)
     
 
@@ -347,17 +329,12 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
     cbar_labels = ["Intensity (arb. u.)", r"$\omega$ (1/cm)", r"$\Gamma$ (1/cm)"]
     
     # In a loop, plot peak intensity, position and linewidth
+    cmap = pg.colormap.getFromMatplotlib("gist_rainbow")
     for i in range(3):
-        # The first plt.close() avoids funny interactions with the interactive plot
-        plt.close()
-        # In this line, i = i+1 to skip the first parameter which is the offset
-        im = plt.imshow(fitresults_ma[:,:,i+1], extent = [0, sx, 0, sy], cmap="gist_rainbow")
-        plt.xlabel("µm")
-        plt.ylabel("µm")
-        plt.suptitle(peakname + " " + quantities[i])
-        plt.colorbar(im, label=cbar_labels[i])
-        plt.savefig(folder+"/"+peakname + "_" + quantities[i]+".pdf", format="pdf", dpi=300)
-        plt.close()
+        imv = pg.ImageView()
+        imv.setImage(fitresults_ma[:,:,i+1])
+        imv.setColorMap(cmap)
+        #imv.setMask(mask)
 
     return()
 
@@ -464,15 +441,6 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     nx, ny = pdict["size_px"] # Scan size in pixels
     sx, sy = pdict["size_um"] # Scan size in microns
     (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
-    crange_theta = pdict["crange_theta"] # Colorbar range of twist angle
-    crange_grad_theta = pdict["crange_grad_theta"] # Colorbar range of twist angle gradient
-    
-    # Create an array of TA position values where all values above the 
-    # interpolation range maximum (748 1/cm) are replaced by a dummy value of 0
-    posTA_cutoff = np.where(fitresults[:,:,2] > 748, 0, fitresults[:,:,2])
-    
-    # Calculate the twist angle array
-    theta = TA_position_to_theta(posTA_cutoff)
     
     # Conditions to check if the best fit parameters fall into their threshold interval
     conditions = [
@@ -485,18 +453,21 @@ def map_theta(fitresults, fiterrors, pdict, folder):
         (fiterrors != 0)
     ]
     
-    # Create the mask
+    # Create the mask in 2D
     mask = np.logical_or.reduce(conditions)
+    
+    # Apply mask to fitresults and fill masked entries with 0 because interpl1d
+    # does not accept masked arrays as an input
+    fitresults_0 = np.ma.masked_array(fitresults, mask[..., np.newaxis], fill_value=0)
+    
+    # Calculate the twist angle array
+    theta = TA_position_to_theta(fitresults_0[:,:,2])
     
     # Apply the mask to theta
     theta_ma = np.ma.masked_array(theta, mask=mask)
     
     # Map the twist angle
-    # Check if colorbar ranges were specified, if so: Apply them.        
-    if crange_theta != ():
-        im = plt.imshow(theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_theta[0], vmax=crange_theta[1])
-    else:
-        im = plt.imshow(theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow")
+    im = plt.imshow(theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow")
     plt.xlabel("µm")
     plt.ylabel("µm")
     plt.suptitle("Twist angle")
@@ -531,11 +502,7 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     grad_theta_ma = np.ma.masked_array(grad_theta_ma.data, updated_mask)
     
     # Map the twist angle gradient
-    # Check if colorbar ranges were specified, if so: Apply them.        
-    if crange_grad_theta != ():
-        im = plt.imshow(grad_theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_grad_theta[0], vmax=crange_grad_theta[1])
-    else:
-        im = plt.imshow(grad_theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow")    
+    im = plt.imshow(grad_theta_ma, extent = [0, sx, 0, sy], cmap="gist_rainbow")
     plt.xlabel("µm")
     plt.ylabel("µm")
     plt.suptitle("Twist angle gradient")
@@ -544,168 +511,6 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     plt.close()
 
     return()
-
-
-###############################################################################
-# 3.4 Experimental: interactive stuff 
-###############################################################################
-
-# This function is activated when double clicking in tne interactive map and 
-# plots the spectrum + fit in the point that was clicked
-def onclick(event, fitresults, fiterrors, pdict):
-    if event.dblclick:
-        if event.button == 1:
-            if isinstance(event.ydata, float): # Check if the doubleclick event happened inside the plot and returns correct values
-                # Exact location of click in axis units
-                valx, valy = event.xdata, event.ydata
-                
-                # Find index coordinates of click position
-                x_map = np.abs(xaxis - valx).argmin()
-                y_map = np.abs(yaxis - valy).argmin()
-                
-                # Extract required variables from the pdict
-                plotrange = pdict["plotrange"]
-                fitrange = pdict["fitrange"]
-                (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
-                
-                # Find start and stop indices of plotrange and fitrange in spectrum
-                i_plotstart = np.abs(xdata - plotrange[0]).argmin()
-                i_plotstop = np.abs(xdata - plotrange[1]).argmin()
-                i_fitstart = np.abs(xdata - fitrange[0]).argmin()
-                i_fitstop = np.abs(xdata - fitrange[1]).argmin()
-
-                # Create x and y array in the plotrange
-                xdata_plot = xdata[i_plotstart:i_plotstop]
-                ydata_plot = data[-y_map, x_map, i_plotstart:i_plotstop]
-                # Create x array in the fitrange
-                xdata_fit = xdata[i_fitstart:i_fitstop]
-
-                # Clear the previous spectrum + fit from the plot
-                ax3.cla()
-                
-                # Scatter the spectrum
-                ax3.scatter(xdata_plot, ydata_plot, s=5, zorder=1)
-                
-                # Plot the fit if it succeeded in that point
-                if fiterrors[-y_map, x_map] == 0:
-                    ax3.plot(xdata_fit, lorentzian(xdata_fit, *fitresults[-y_map, x_map]), color="tab:orange")
-                    ax3.set_xlim(plotrange)
-                    
-                    # Assemble text string with best fit parameters
-                    text_I = r"I = %.0f " %(fitresults[-y_map, x_map][1])
-                    text_x0 = "\n" + "$\omega$ = %.2f rel. 1/cm" %(fitresults[-y_map, x_map][2])
-                    text_lw = "\n" + "$\Gamma$ = %.2f 1/cm" %(fitresults[-y_map, x_map][3])
-                    
-                    # Define conditions to check if the fitresults violate threshold boundaries
-                    cond_c = (thresh_c[0] > fitresults[-y_map, x_map, 1]) or (fitresults[-y_map, x_map, 1] > thresh_c[1])
-                    cond_x0 = (thresh_x0[0] > fitresults[-y_map, x_map, 2]) or (fitresults[-y_map, x_map, 2] > thresh_x0[1])
-                    cond_lw = (thresh_lw[0] > fitresults[-y_map, x_map, 3])  or (fitresults[-y_map, x_map, 3] > thresh_lw[1])
-
-                    # Add information about threshold violations to the string
-                    if cond_c:
-                        ax3.text(0.01, 0.95, text_I, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
-                    else:
-                        ax3.text(0.01, 0.95, text_I, ha='left', va='top', transform=ax3.transAxes)
-                    
-                    if cond_x0:
-                        ax3.text(0.01, 0.94, text_x0, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
-                    else:
-                        ax3.text(0.01, 0.94, text_x0, ha='left', va='top', transform=ax3.transAxes)
-                        
-                    if cond_lw:
-                        ax3.text(0.01, 0.85, text_lw, ha='left', va='top', transform=ax3.transAxes, color="tab:red")
-                    else:
-                        ax3.text(0.01, 0.85, text_lw, ha='left', va='top', transform=ax3.transAxes)
-                        
-                    # Plot the text
-                    #ax3.text(0.01, 0.95, textstr, ha='left', va='top', transform=ax3.transAxes)
-
-                # Update the plot in the window
-                ax3.set_xlabel("Raman shift (rel. 1/cm)")
-                ax3.set_ylabel("CCD counts")
-                ax3.figure.canvas.draw()
-                
-            else:
-                print('Please double click inside a map!')
-                return None
-
-
-def make_figure(fitresults, fiterrors, pdict):
-    
-    # Retrieve required variables from the dictionnary
-    nx, ny = pdict["size_px"] # Scan size in pixels
-    sx, sy = pdict["size_um"] # Scan size in microns
-    peakname = pdict["peakname"] # Name of the peak
-    (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"] # Threshold values
-    crange_int = pdict["crange_int"] # Colorbar range of intensity
-    crange_pos = pdict["crange_pos"] # Colorbar range of position
-    crange_lw = pdict["crange_lw"] # Colorbar range of linewidth
-    
-    # Conditions to check if the best fit parameters fall into their threshold interval
-    conditions = [
-        (thresh_c[0] > fitresults[:, :, 1]),
-        (fitresults[:, :, 1] > thresh_c[1]),
-        (thresh_x0[0] > fitresults[:, :, 2]),
-        (fitresults[:, :, 2] > thresh_x0[1]),
-        (thresh_lw[0] > fitresults[:, :, 3]),
-        (fitresults[:, :, 3] > thresh_lw[1]),
-        (fiterrors != 0)
-    ]
-    
-    # Create the mask in 2D
-    mask = np.logical_or.reduce(conditions)
-    
-    # Apply the mask to fitresults
-    fitresults_ma = np.ma.masked_array(fitresults, mask=np.broadcast_to(mask[:, :, np.newaxis], fitresults.shape))
-    
-    # Build the figure with grid and subplots
-    fig = plt.figure(figsize = (15, 10))
-    grid = mpl.gridspec.GridSpec(6, 6, figure = fig, hspace=0.6, wspace=0.8)
-    ax0 = fig.add_subplot(grid[:3, 0:2])
-    ax1 = fig.add_subplot(grid[:3, 2:4])
-    ax2 = fig.add_subplot(grid[:3, 4:6])
-    ax3 = fig.add_subplot(grid[3:6, :])
-    
-    # Plot the maps
-    # Check if colorbar ranges were specified, if so: Apply them.
-    if crange_int != ():
-        im0 = ax0.imshow(fitresults_ma[:,:,1], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_int[0], vmax=crange_int[1]) # Intensity
-    else:
-        im0 = ax0.imshow(fitresults_ma[:,:,1], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
-    
-    if crange_pos != ():
-        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_pos[0], vmax=crange_pos[1]) # Intensity
-    else:
-        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
-    
-    if crange_lw != ():
-        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_lw[0], vmax=crange_lw[1]) # Intensity
-    else:
-        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
-         
-    # Label axes
-    ax0.set_xlabel("µm")
-    ax0.set_ylabel("µm")
-    ax1.set_xlabel("µm")
-    ax1.set_ylabel("µm")
-    ax2.set_xlabel("µm")
-    ax2.set_ylabel("µm")
-    ax3.set_xlabel("Raman shift (rel. 1/cm)")
-    ax3.set_ylabel("CCD counts")
-    
-    # Add colorbars
-    plt.colorbar(im0, ax=ax0, label="Intensity (arb. u.)")   
-    plt.colorbar(im1, ax=ax1, label="Position (rel. 1/cm)") 
-    plt.colorbar(im2, ax=ax2, label="Linewidth (1/cm)") 
-    
-    # Set titles
-    ax0.set_title(peakname + " intensity")
-    ax1.set_title(peakname + " position")
-    ax2.set_title(peakname + " linewidth")
-   
-    fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, fitresults, fiterrors, pdict))
-    
-    return(ax0, ax1, ax2, ax3)
 
 
 ###############################################################################
@@ -731,11 +536,6 @@ dict_TA["fitrange"] = (240, 290)             # Data range for fitting
 dict_TA["plotrange"] = (220, 310)            # Data range for plotting
 dict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw)
 dict_TA["max_gradient"] = max_gradient
-dict_TA["crange_int"] = crange_TA_int
-dict_TA["crange_pos"] = crange_TA_pos
-dict_TA["crange_lw"] = crange_TA_lw
-dict_TA["crange_theta"] = crange_theta
-dict_TA["crange_grad_theta"] = crange_grad_theta
 save_object(folder, dict_TA, "dict_TA")
 
 # The first two lines check if the peak dictionary already exists and create
@@ -749,9 +549,6 @@ dict_G["peakname"] = "G"
 dict_G["fitrange"] = (1500, 1610)             # Data range for fitting
 dict_G["plotrange"] = (1500, 1800)            # Data range for plotting
 dict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
-dict_G["crange_int"] = crange_G_int
-dict_G["crange_pos"] = crange_G_pos
-dict_G["crange_lw"] = crange_G_lw
 save_object(folder, dict_G, "dict_G")
 
 # The first two lines check if the peak dictionary already exists and create
@@ -765,9 +562,6 @@ dict_LO["peakname"] = "LO"
 dict_LO["fitrange"] = (1610, 1800)             # Data range for fitting
 dict_LO["plotrange"] = (1500, 1800)            # Data range for plotting
 dict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
-dict_LO["crange_int"] = crange_LO_int
-dict_LO["crange_pos"] = crange_LO_pos
-dict_LO["crange_lw"] = crange_LO_lw
 save_object(folder, dict_LO, "dict_LO")
 
 # The first two lines check if the peak dictionary already exists and create
@@ -781,9 +575,6 @@ dict_2D["peakname"] = "2D"
 dict_2D["fitrange"] = (2600, 2800)             # Data range for fitting
 dict_2D["plotrange"] = (2400, 2900)            # Data range for plotting
 dict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
-dict_2D["crange_int"] = crange_2D_int
-dict_2D["crange_pos"] = crange_2D_pos
-dict_2D["crange_lw"] = crange_2D_lw
 save_object(folder, dict_2D, "dict_2D")
 
 
@@ -791,7 +582,7 @@ save_object(folder, dict_2D, "dict_2D")
 # 4.3 Read the Raman scan data
 ###############################################################################
 
-xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
+#xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
 
 ###############################################################################
 # 4.4 Perform the actual fitting and mapping
@@ -815,15 +606,11 @@ if b_fit_2D == True:
 if b_map_TA == True:
     map_lorentz_parameters(fitresults_TA, fiterrors_TA, dict_TA, folder)
     map_theta(fitresults_TA, fiterrors_TA, dict_TA, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, dict_TA)
 if b_map_G == True:
     map_lorentz_parameters(fitresults_G, fiterrors_G, dict_G, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, dict_G)
 if b_map_LO == True:
     map_lorentz_parameters(fitresults_LO, fiterrors_LO, dict_LO, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_LO, fiterrors_LO, dict_LO)
 if b_map_2D == True:
     map_lorentz_parameters(fitresults_2D, fiterrors_2D, dict_2D, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, dict_2D)
     
     

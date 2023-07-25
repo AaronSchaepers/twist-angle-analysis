@@ -5,16 +5,6 @@
 @date: 2023/06/19
 @github: https://github.com/AaronSchaepers/twist-angle-analysis
 
-
-IDEAS
-    - Make range of color scale accessible to the user
-    - Use the threshold dynamically in the interactive plot
-    - Make one interactive map per peak 
-    - Disable intensity threshold, at least upper bound, because the max int 
-      values depend heavily on the integration time
-    - Export pdfs with dpi = 800 directly from interactive plot
-    - Progress bars
-
 PREPARATION
 
     Export Raman maps from ProjectFive as .txt by choosing "Table" in the
@@ -62,6 +52,14 @@ HOW TO USE THIS CODE
     and also the Raman spectrum and fit in any point you double click on any 
     of the maps. It is very helpful when it comes to finding the right
     threshold parameters that serve to exclude faulty spectra.
+    
+IDEAS FOR FUTURE FEATURES
+    - Use the threshold dynamically in the interactive plot
+    - Make one interactive map per peak 
+    - Disable intensity threshold, at least upper bound, because the max int 
+      values depend heavily on the integration time
+    - Export pdfs with dpi = 800 directly from interactive plot
+    - Progress bars
 """
 
 import pickle
@@ -93,11 +91,17 @@ spectral_mean_range = (300, 350)
 size_px = (100, 100)    # Size of the Scan in pixels
 size_um = (7, 7)        # Size of the Scan in µm
 
-# What peaks shall be fitted?
+# When importing Raman raw data: Which peaks shall be fitted?
 b_fit_TA = False
 b_fit_G = False
 b_fit_LO = False
 b_fit_2D = False
+
+# When loading the results from an old fit: Which peaks shall be loaded?
+b_load_TA = True
+b_load_G = False
+b_load_LO = False
+b_load_2D = False
 
 # What peaks shall be mapped?
 b_map_TA = True
@@ -169,13 +173,6 @@ crange_grad_theta = ()
 ###############################################################################
 # 3.1 Functions for importing and exporting data 
 ###############################################################################
-
-""" Save an object using the pickle module """
-def save_object(folder, file, name):
-    with open(str(folder) + "/" + str(name)+".pkl", "wb") as f:
-            pickle.dump(file, f, pickle.HIGHEST_PROTOCOL)
-    return()
-
 
 """ Read Raman scan data from .txt file, set baseline to zero """
 def read_raman_scan(folder, file, size_px, spectral_mean_range):
@@ -712,118 +709,154 @@ def make_figure(fitresults, fiterrors, pdict):
 """ 4. Don't touch section B (executing the code) """
 ###############################################################################
 
-
 ###############################################################################
-# 4.1 Assemble peak dictionaries with information for mapping and fitting
-###############################################################################
-
-# The first two lines check if the peak dictionary already exists and create
-# it only if it doesn't. That way, stuff added later on won't be overwritten.
-try: type(dict_TA)
-except NameError: dict_TA = {}
-# Insert a place holder value for the position starting value, which is 
-# determined dynamically in the fitting routine
-dict_TA["startparams"] = [startparams_TA[0], startparams_TA[1], 0, startparams_TA[2]]
-dict_TA["size_px"] = size_px
-dict_TA["size_um"] = size_um
-dict_TA["peakname"] = "TA"
-dict_TA["fitrange"] = (240, 290)             # Data range for fitting
-dict_TA["plotrange"] = (220, 310)            # Data range for plotting
-dict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw)
-dict_TA["max_gradient"] = max_gradient
-dict_TA["crange_int"] = crange_TA_int
-dict_TA["crange_pos"] = crange_TA_pos
-dict_TA["crange_lw"] = crange_TA_lw
-dict_TA["crange_theta"] = crange_theta
-dict_TA["crange_grad_theta"] = crange_grad_theta
-save_object(folder, dict_TA, "dict_TA")
-
-# The first two lines check if the peak dictionary already exists and create
-# it only if it doesn't. That way, stuff added later on won't be overwritten.
-try: type(dict_G)
-except NameError: dict_G = {}
-dict_G["startparams"] = [startparams_G[0], startparams_G[1], 0, startparams_G[2]]
-dict_G["size_px"] = size_px
-dict_G["size_um"] = size_um
-dict_G["peakname"] = "G"
-dict_G["fitrange"] = (1500, 1610)             # Data range for fitting
-dict_G["plotrange"] = (1500, 1800)            # Data range for plotting
-dict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
-dict_G["crange_int"] = crange_G_int
-dict_G["crange_pos"] = crange_G_pos
-dict_G["crange_lw"] = crange_G_lw
-save_object(folder, dict_G, "dict_G")
-
-# The first two lines check if the peak dictionary already exists and create
-# it only if it doesn't. That way, stuff added later on won't be overwritten.
-try: type(dict_LO)
-except NameError: dict_LO = {}
-dict_LO["startparams"] = [startparams_LO[0], startparams_LO[1], 0, startparams_LO[2]]
-dict_LO["size_px"] = size_px
-dict_LO["size_um"] = size_um
-dict_LO["peakname"] = "LO"
-dict_LO["fitrange"] = (1610, 1800)             # Data range for fitting
-dict_LO["plotrange"] = (1500, 1800)            # Data range for plotting
-dict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
-dict_LO["crange_int"] = crange_LO_int
-dict_LO["crange_pos"] = crange_LO_pos
-dict_LO["crange_lw"] = crange_LO_lw
-save_object(folder, dict_LO, "dict_LO")
-
-# The first two lines check if the peak dictionary already exists and create
-# it only if it doesn't. That way, stuff added later on won't be overwritten.
-try: type(dict_2D)
-except NameError: dict_2D = {}
-dict_2D["startparams"] = [startparams_2D[0], startparams_2D[1], 0, startparams_2D[2]]
-dict_2D["size_px"] = size_px
-dict_2D["size_um"] = size_um
-dict_2D["peakname"] = "2D"
-dict_2D["fitrange"] = (2600, 2800)             # Data range for fitting
-dict_2D["plotrange"] = (2400, 2900)            # Data range for plotting
-dict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
-dict_2D["crange_int"] = crange_2D_int
-dict_2D["crange_pos"] = crange_2D_pos
-dict_2D["crange_lw"] = crange_2D_lw
-save_object(folder, dict_2D, "dict_2D")
-
-
-###############################################################################
-# 4.3 Read the Raman scan data
+# 4.1 Import Raman raw data and perform the fits
 ###############################################################################
 
-xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
-
-###############################################################################
-# 4.4 Perform the actual fitting and mapping
-###############################################################################
+# Check if any fitting will be done, import Raman data only if that is the case
+if any([b_fit_TA, b_fit_G, b_fit_LO, b_fit_2D]): 
+    xdata, data = read_raman_scan(folder, file, size_px, spectral_mean_range)
 
 # Create lists that are needed to locate the index coordinates of a click event
 xaxis = np.linspace(0, size_um[0], size_px[0])
-yaxis = np.linspace(0, size_um[1], size_px[1]) 
+yaxis = np.linspace(0, size_um[1], size_px[1])
 
-# Fitting
+# TA: Perform fits and save the results #######################################
 if b_fit_TA == True:
-    fitresults_TA, fitresults_std_TA, fiterrors_TA = fit_to_map(xdata, data, dict_TA)
+    # The first two lines check if the peak dictionary already exists and create
+    # it only if it doesn't. That way, stuff added later on won't be overwritten.
+    # Insert a place holder value for the position starting value, which is 
+    # determined dynamically in the fitting routine
+    pdict_TA = {}
+    pdict_TA["startparams"] = [startparams_TA[0], startparams_TA[1], 0, startparams_TA[2]]
+    pdict_TA["size_px"] = size_px
+    pdict_TA["size_um"] = size_um
+    pdict_TA["peakname"] = "TA"
+    pdict_TA["fitrange"] = (240, 290)             # Data range for fitting
+    pdict_TA["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw)
+    pdict_TA["max_gradient"] = max_gradient
+    pdict_TA["crange_int"] = crange_TA_int
+    pdict_TA["crange_pos"] = crange_TA_pos
+    pdict_TA["crange_lw"] = crange_TA_lw
+    pdict_TA["crange_theta"] = crange_theta
+    pdict_TA["crange_grad_theta"] = crange_grad_theta
+    # Perform the fits
+    fitresults_TA, fitresults_std_TA, fiterrors_TA = fit_to_map(xdata, data, pdict_TA)
+    # Save the results
+    with open(folder+"/TA", "wb") as file:
+        pickle.dump([xdata, data, pdict_TA, fitresults_TA, fitresults_std_TA, fiterrors_TA], file)
+
+
+
+# G: Perform fits and save the results #######################################
 if b_fit_G == True:
-    fitresults_G, fitresults_std_G, fiterrors_G = fit_to_map(xdata, data, dict_G)
+    # The first two lines check if the peak dictionary already exists and create
+    # it only if it doesn't. That way, stuff added later on won't be overwritten.
+    # Insert a place holder value for the position starting value, which is 
+    # determined dynamically in the fitting routine
+    pdict_G = {}
+    pdict_G["startparams"] = [startparams_G[0], startparams_G[1], 0, startparams_G[2]]
+    pdict_G["size_px"] = size_px
+    pdict_G["size_um"] = size_um
+    pdict_G["peakname"] = "TA"
+    pdict_G["fitrange"] = (240, 290)             # Data range for fitting
+    pdict_G["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
+    pdict_G["max_gradient"] = max_gradient
+    pdict_G["crange_int"] = crange_G_int
+    pdict_G["crange_pos"] = crange_G_pos
+    pdict_G["crange_lw"] = crange_G_lw
+    # Perform the fits
+    fitresults_G, fitresults_std_G, fiterrors_G = fit_to_map(xdata, data, pdict_G)
+    # Save the results
+    with open(folder+"/G", "wb") as file:
+        pickle.dump([xdata, data, pdict_G, fitresults_G, fitresults_std_G, fiterrors_G], file)
+
+
+# LO: Perform fits and save the results #######################################
 if b_fit_LO == True:
-    fitresults_LO, fitresults_std_LO, fiterrors_LO = fit_to_map(xdata, data, dict_LO)
+    # The first two lines check if the peak dictionary already exists and create
+    # it only if it doesn't. That way, stuff added later on won't be overwritten.
+    # Insert a place holder value for the position starting value, which is 
+    # determined dynamically in the fitting routine
+    pdict_LO = {}
+    pdict_LO["startparams"] = [startparams_LO[0], startparams_LO[1], 0, startparams_LO[2]]
+    pdict_LO["size_px"] = size_px
+    pdict_LO["size_um"] = size_um
+    pdict_LO["peakname"] = "TA"
+    pdict_LO["fitrange"] = (240, 290)             # Data range for fitting
+    pdict_LO["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
+    pdict_LO["max_gradient"] = max_gradient
+    pdict_LO["crange_int"] = crange_LO_int
+    pdict_LO["crange_pos"] = crange_LO_pos
+    pdict_LO["crange_lw"] = crange_LO_lw
+    # Perform the fits
+    fitresults_LO, fitresults_std_LO, fiterrors_LO = fit_to_map(xdata, data, pdict_LO)
+    # Save the results
+    with open(folder+"/LO", "wb") as file:
+        pickle.dump([xdata, data, pdict_LO, fitresults_LO, fitresults_std_LO, fiterrors_LO], file)
+
+
+# 2D: Perform fits and save the results #######################################
 if b_fit_2D == True:
-    fitresults_2D, fitresults_std_2D, fiterrors_2D = fit_to_map(xdata, data, dict_2D)
+    # The first two lines check if the peak dictionary already exists and create
+    # it only if it doesn't. That way, stuff added later on won't be overwritten.
+    # Insert a place holder value for the position starting value, which is 
+    # determined dynamically in the fitting routine
+    pdict_2D = {}
+    pdict_2D["startparams"] = [startparams_2D[0], startparams_2D[1], 0, startparams_2D[2]]
+    pdict_2D["size_px"] = size_px
+    pdict_2D["size_um"] = size_um
+    pdict_2D["peakname"] = "TA"
+    pdict_2D["fitrange"] = (240, 290)             # Data range for fitting
+    pdict_2D["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
+    pdict_2D["max_gradient"] = max_gradient
+    pdict_2D["crange_int"] = crange_2D_int
+    pdict_2D["crange_pos"] = crange_2D_pos
+    pdict_2D["crange_lw"] = crange_2D_lw
+    # Perform the fits
+    fitresults_2D, fitresults_std_2D, fiterrors_2D = fit_to_map(xdata, data, pdict_2D)
+    # Save the results
+    with open(folder+"/2D", "wb") as file:
+        pickle.dump([xdata, data, pdict_2D, fitresults_2D, fitresults_std_2D, fiterrors_2D], file)
+
+    
+###############################################################################
+# 4.2 Load results of a previous fit along with xdata and the peak dictionnary
+###############################################################################
+    
+if b_load_TA == True:
+    with open(folder+"/TA", "rb") as file:
+        xdata, data, pdict_TA, fitresults_TA, fitresults_std_TA, fiterrors_TA = pickle.load(file)
+if b_load_G == True:
+    with open(folder+"/G", "rb") as file:
+        xdata, data, pdict_G, fitresults_G, fitresults_std_G, fiterrors_G = pickle.load(file)
+if b_load_LO == True:
+    with open(folder+"/LO", "rb") as file:
+        xdata, data, pdict_LO, fitresults_LO, fitresults_std_LO, fiterrors_LO = pickle.load(file)
+if b_load_2D == True:
+    with open(folder+"/2D", "rb") as file:
+        xdata, data, pdict_2D, fitresults_2D, fitresults_std_2D, fiterrors_2D = pickle.load(file)
      
-# Save maps, open interactive figures
+        
+###############################################################################
+# 4.3 Open the interactive figures, save the maps
+###############################################################################
 if b_map_TA == True:
-    map_lorentz_parameters(fitresults_TA, fiterrors_TA, dict_TA, folder)
-    map_theta(fitresults_TA, fiterrors_TA, dict_TA, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, dict_TA)
+    map_lorentz_parameters(fitresults_TA, fiterrors_TA, pdict_TA, folder)
+    map_theta(fitresults_TA, fiterrors_TA, pdict_TA, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, pdict_TA)
 if b_map_G == True:
-    map_lorentz_parameters(fitresults_G, fiterrors_G, dict_G, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, dict_G)
+    map_lorentz_parameters(fitresults_G, fiterrors_G, pdict_G, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, pdict_G)
 if b_map_LO == True:
-    map_lorentz_parameters(fitresults_LO, fiterrors_LO, dict_LO, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_LO, fiterrors_LO, dict_LO)
+    map_lorentz_parameters(fitresults_LO, fiterrors_LO, pdict_LO, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_LO, fiterrors_LO, pdict_LO)
 if b_map_2D == True:
-    map_lorentz_parameters(fitresults_2D, fiterrors_2D, dict_2D, folder)
-    ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, dict_2D)
+    map_lorentz_parameters(fitresults_2D, fiterrors_2D, pdict_2D, folder)
+    ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, pdict_2D)
     
     

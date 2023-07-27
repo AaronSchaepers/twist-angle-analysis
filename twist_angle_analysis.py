@@ -723,8 +723,6 @@ yaxis = np.linspace(0, size_um[1], size_px[1])
 
 # TA: Perform fits and save the results #######################################
 if b_fit_TA == True:
-    # The first two lines check if the peak dictionary already exists and create
-    # it only if it doesn't. That way, stuff added later on won't be overwritten.
     # Insert a place holder value for the position starting value, which is 
     # determined dynamically in the fitting routine
     pdict_TA = {}
@@ -735,12 +733,12 @@ if b_fit_TA == True:
     pdict_TA["fitrange"] = (240, 290)             # Data range for fitting
     pdict_TA["plotrange"] = (220, 310)            # Data range for plotting
     pdict_TA["params_thresh"] = (thresh_TA_c, thresh_TA_x0, thresh_TA_lw)
-    pdict_TA["max_gradient"] = max_gradient
     pdict_TA["crange_int"] = crange_TA_int
     pdict_TA["crange_pos"] = crange_TA_pos
     pdict_TA["crange_lw"] = crange_TA_lw
     pdict_TA["crange_theta"] = crange_theta
     pdict_TA["crange_grad_theta"] = crange_grad_theta
+    pdict_TA["max_gradient"] = max_gradient
     # Perform the fits
     fitresults_TA, fitresults_std_TA, fiterrors_TA = fit_to_map(xdata, data, pdict_TA)
     # Save the results
@@ -751,8 +749,6 @@ if b_fit_TA == True:
 
 # G: Perform fits and save the results #######################################
 if b_fit_G == True:
-    # The first two lines check if the peak dictionary already exists and create
-    # it only if it doesn't. That way, stuff added later on won't be overwritten.
     # Insert a place holder value for the position starting value, which is 
     # determined dynamically in the fitting routine
     pdict_G = {}
@@ -763,7 +759,6 @@ if b_fit_G == True:
     pdict_G["fitrange"] = (240, 290)             # Data range for fitting
     pdict_G["plotrange"] = (220, 310)            # Data range for plotting
     pdict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
-    pdict_G["max_gradient"] = max_gradient
     pdict_G["crange_int"] = crange_G_int
     pdict_G["crange_pos"] = crange_G_pos
     pdict_G["crange_lw"] = crange_G_lw
@@ -776,8 +771,6 @@ if b_fit_G == True:
 
 # LO: Perform fits and save the results #######################################
 if b_fit_LO == True:
-    # The first two lines check if the peak dictionary already exists and create
-    # it only if it doesn't. That way, stuff added later on won't be overwritten.
     # Insert a place holder value for the position starting value, which is 
     # determined dynamically in the fitting routine
     pdict_LO = {}
@@ -788,7 +781,6 @@ if b_fit_LO == True:
     pdict_LO["fitrange"] = (240, 290)             # Data range for fitting
     pdict_LO["plotrange"] = (220, 310)            # Data range for plotting
     pdict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
-    pdict_LO["max_gradient"] = max_gradient
     pdict_LO["crange_int"] = crange_LO_int
     pdict_LO["crange_pos"] = crange_LO_pos
     pdict_LO["crange_lw"] = crange_LO_lw
@@ -801,8 +793,6 @@ if b_fit_LO == True:
 
 # 2D: Perform fits and save the results #######################################
 if b_fit_2D == True:
-    # The first two lines check if the peak dictionary already exists and create
-    # it only if it doesn't. That way, stuff added later on won't be overwritten.
     # Insert a place holder value for the position starting value, which is 
     # determined dynamically in the fitting routine
     pdict_2D = {}
@@ -813,7 +803,6 @@ if b_fit_2D == True:
     pdict_2D["fitrange"] = (240, 290)             # Data range for fitting
     pdict_2D["plotrange"] = (220, 310)            # Data range for plotting
     pdict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
-    pdict_2D["max_gradient"] = max_gradient
     pdict_2D["crange_int"] = crange_2D_int
     pdict_2D["crange_pos"] = crange_2D_pos
     pdict_2D["crange_lw"] = crange_2D_lw
@@ -829,19 +818,53 @@ if b_fit_2D == True:
 ###############################################################################
     
 if b_load_TA == True:
+    
     with open(folder+"/TA", "rb") as file:
         xdata, data, pdict_TA, fitresults_TA, fitresults_std_TA, fiterrors_TA = pickle.load(file)
+    
+    # Update colorbar ranges in the pdict
+    pdict_TA["crange_int"] = crange_TA_int
+    pdict_TA["crange_pos"] = crange_TA_pos
+    pdict_TA["crange_lw"] = crange_TA_lw
+    pdict_TA["crange_theta"] = crange_theta
+    pdict_TA["crange_grad_theta"] = crange_grad_theta
+    pdict_TA["max_gradient"] = max_gradient
+    
+    
 if b_load_G == True:
+   
     with open(folder+"/G", "rb") as file:
         xdata, data, pdict_G, fitresults_G, fitresults_std_G, fiterrors_G = pickle.load(file)
+
+    # Update colorbar ranges in the pdict
+    pdict_G["crange_int"] = crange_G_int
+    pdict_G["crange_pos"] = crange_G_pos
+    pdict_G["crange_lw"] = crange_G_lw
+    
+    
 if b_load_LO == True:
+
     with open(folder+"/LO", "rb") as file:
         xdata, data, pdict_LO, fitresults_LO, fitresults_std_LO, fiterrors_LO = pickle.load(file)
+
+    # Update colorbar ranges in the pdict
+    pdict_LO["crange_int"] = crange_LO_int
+    pdict_LO["crange_pos"] = crange_LO_pos
+    pdict_LO["crange_lw"] = crange_LO_lw
+
+
 if b_load_2D == True:
+
     with open(folder+"/2D", "rb") as file:
         xdata, data, pdict_2D, fitresults_2D, fitresults_std_2D, fiterrors_2D = pickle.load(file)
      
-        
+    # Update colorbar ranges in the pdict
+    pdict_2D["crange_int"] = crange_2D_int
+    pdict_2D["crange_pos"] = crange_2D_pos
+    pdict_2D["crange_lw"] = crange_2D_lw  
+
+
+      
 ###############################################################################
 # 4.3 Open the interactive figures, save the maps
 ###############################################################################

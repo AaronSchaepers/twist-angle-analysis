@@ -21,13 +21,12 @@ HOW TO USE THIS CODE
         3. Don't touch section A (functions)
         4. Don't touch section B (code execution)
         
-    Obviously, the last two sections are not meant to be edited as they contain
-    the main body of this code (kind of the back end).
     As a user, here is what you have to do to analyse your Raman Scan:
     
     1. User input section:
         - Provide the required information about the scan (see comments)
-        - Choose which peaks to fit and to map
+        - Choose which peaks to fit, wether to load old fitresults, and which
+          peaks to map
         - Run this code to start the fitting and mapping, or proceed to the
 
     2. Advanced user input section:
@@ -38,20 +37,41 @@ HOW TO USE THIS CODE
         
     The default values give good results for the TA, G, LO and 2D peak. You
     might want to save them by commenting them out if you change them so they
-    don't get los
+    don't get lost.
 
-    If mapping is activated, the code will do two things. Firstly, it will 
-    export the maps of all selected peaks to the same directory where the scan 
-    data is stored. Secondly, it will open up an interactive window ONLY FOR
+    Here is what the code does, depending on your input:
+    
+    1. If fitting is activated:
+        - Import the Raman data you specified
+        - Perform Lorentzian fits to all the peaks you selected (a single fit
+          for each peak)
+        - Export the numerical fitresults for each peak, storing them in the same 
+          directory that contains the raw data.
+          
+    2. If loading an olf fit is activated:
+        - Load the results of a previously saved fit so that they are available
+          for the plotting routine
+        
+    3. 
+        
+    1. Export the maps of intensity, position and linewidth for all selected
+       peaks. They are saved in the same directory where the scan data is 
+       stored.
+       
+    2. 
+    
+        Firstly, it will 
+    export the maps of all selected peaks to . Secondly, it will open up an interactive window ONLY FOR
     THE LAST SELECTED PEAK. That means you can run the fitting and mapping for
     multiple peaks and you will find the results in the directory given in
     Section 1. But only for the last peak selected for mapping, the interactive
     window will show up.
     
-    The interactive window shows the maps of intensity, position and linewidth
-    and also the Raman spectrum and fit in any point you double click on any 
-    of the maps. It is very helpful when it comes to finding the right
-    threshold parameters that serve to exclude faulty spectra.
+    The interactive window shows the maps of intensity, position and linewidth.
+    Furthermore, you can double-click in any of these maps and it will show the
+    Raman spectrum and fit in this data point. This is very helpful when it 
+    comes to check the quality of the fits and finding the right threshold 
+    parameters that serve to exclude faulty spectra.
     
 IDEAS FOR FUTURE FEATURES
     - Use the threshold dynamically in the interactive plot
@@ -79,33 +99,33 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/Code/Test_data" 
+folder = "/Users/Aaron/Desktop/Code/ETIRF04-123" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "test_data_100x100.txt" 
+file = "G_2D_126x123.txt" 
 
-# In 1/cm, a spectral range without any features. This is used to calculate 
-# the mean background noise which is subtracted from the data
-spectral_mean_range = (300, 350) 
+# In 1/cm, any spectral range without Raman features. This is used to calculate 
+# the mean background noise which is subtracted from the data.
+spectral_mean_range = (2000, 2100) 
 
-size_px = (100, 100)    # Size of the Scan in pixels
+size_px = (126, 123)    # Size of the Scan in pixels
 size_um = (7, 7)        # Size of the Scan in µm
 
-# When importing Raman raw data: Which peaks shall be fitted?
+# When importing new Raman raw data: Which peaks shall be fitted?
 b_fit_TA = False
-b_fit_G = False
+b_fit_G = True
 b_fit_LO = False
 b_fit_2D = False
 
 # When loading the results from an old fit: Which peaks shall be loaded?
-b_load_TA = True
+b_load_TA = False
 b_load_G = False
 b_load_LO = False
 b_load_2D = False
 
-# What peaks shall be mapped?
-b_map_TA = True
-b_map_G = False
+# Which peaks shall be mapped?
+b_map_TA = False
+b_map_G = True
 b_map_LO = False
 b_map_2D = False
 
@@ -117,10 +137,10 @@ b_map_2D = False
 # Starting parameters for Lorentzian peak fits in the order:
 # Offset, intensity, linewidth.
 # The starting value for the position is determined dynamically
-startparams_TA = [0, 250, 4]
-startparams_G = [0, 1E4, 32]
-startparams_LO = [0, 5E3, 8]
-startparams_2D = [0, 2E4, 30]
+startparams_TA = [0, 250, 3]
+startparams_G = [0, 8E3, 13]
+startparams_LO = [0, 5E3, 5]
+startparams_2D = [0, 2E4, 25]
 
 # Threshold parameters for excluding implausible fit results
 # NOTE: These are not boundary values for the fitting routine!
@@ -130,11 +150,11 @@ startparams_2D = [0, 2E4, 30]
 
 thresh_TA_c = [20, 6000]      # Intensity
 thresh_TA_x0 = [250, 275]     # Position
-thresh_TA_lw = [0.4, 18]       # Linewidth
+thresh_TA_lw = [0.4, 18]      # Linewidth
 
-thresh_G_c = [1E3, 1E15]      # Intensity
-thresh_G_x0 = [1577, 1587]    # Position
-thresh_G_lw = [8, 50]         # Linewidth
+thresh_G_c = [1E3, 6E4]      # Intensity
+thresh_G_x0 = [1577, 1595]    # Position
+thresh_G_lw = [8, 30]         # Linewidth
 
 thresh_LO_c = [300, 1E5]      # Intensity
 thresh_LO_x0 = [1610, 1630]   # Position
@@ -142,7 +162,7 @@ thresh_LO_lw = [0.8, 30]      # Linewidth
 
 thresh_2D_c = [1E3, 1E7]      # Intensity
 thresh_2D_x0 = [2650, 2700]   # Position
-thresh_2D_lw = [16, 60]        # Linewidth
+thresh_2D_lw = [16, 60]       # Linewidth
 
 max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  #       values will be excluded from the map.
@@ -200,6 +220,7 @@ def read_raman_scan(folder, file, size_px, spectral_mean_range):
     # to the x and y axes of the scan and the spectra will be stacked along the
     # third axis.
     data = np.zeros((ny,nx,len(data_str)))
+    print(data_float.shape)
     
     # Get indices of the averaging interval for baseline shifting
     i_xmin_mean = np.abs(xlist - spectral_mean_range[0]).argmin()
@@ -755,9 +776,9 @@ if b_fit_G == True:
     pdict_G["startparams"] = [startparams_G[0], startparams_G[1], 0, startparams_G[2]]
     pdict_G["size_px"] = size_px
     pdict_G["size_um"] = size_um
-    pdict_G["peakname"] = "TA"
-    pdict_G["fitrange"] = (240, 290)             # Data range for fitting
-    pdict_G["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_G["peakname"] = "G"
+    pdict_G["fitrange"] = (1500, 1610)             # Data range for fitting
+    pdict_G["plotrange"] = (1500, 1800)            # Data range for plotting
     pdict_G["params_thresh"] = (thresh_G_c, thresh_G_x0, thresh_G_lw)
     pdict_G["crange_int"] = crange_G_int
     pdict_G["crange_pos"] = crange_G_pos
@@ -777,9 +798,9 @@ if b_fit_LO == True:
     pdict_LO["startparams"] = [startparams_LO[0], startparams_LO[1], 0, startparams_LO[2]]
     pdict_LO["size_px"] = size_px
     pdict_LO["size_um"] = size_um
-    pdict_LO["peakname"] = "TA"
-    pdict_LO["fitrange"] = (240, 290)             # Data range for fitting
-    pdict_LO["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_LO["peakname"] = "LO"
+    pdict_LO["fitrange"] = (1610, 1800)             # Data range for fitting
+    pdict_LO["plotrange"] = (1500, 1800)            # Data range for plotting
     pdict_LO["params_thresh"] = (thresh_LO_c, thresh_LO_x0, thresh_LO_lw)
     pdict_LO["crange_int"] = crange_LO_int
     pdict_LO["crange_pos"] = crange_LO_pos
@@ -799,9 +820,9 @@ if b_fit_2D == True:
     pdict_2D["startparams"] = [startparams_2D[0], startparams_2D[1], 0, startparams_2D[2]]
     pdict_2D["size_px"] = size_px
     pdict_2D["size_um"] = size_um
-    pdict_2D["peakname"] = "TA"
-    pdict_2D["fitrange"] = (240, 290)             # Data range for fitting
-    pdict_2D["plotrange"] = (220, 310)            # Data range for plotting
+    pdict_2D["peakname"] = "2D"
+    pdict_2D["fitrange"] = (2600, 2800)             # Data range for fitting
+    pdict_2D["plotrange"] = (2400, 2900)            # Data range for plotting
     pdict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
     pdict_2D["crange_int"] = crange_2D_int
     pdict_2D["crange_pos"] = crange_2D_pos

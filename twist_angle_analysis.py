@@ -99,17 +99,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/Code/ETIRF04-123" 
+folder = "/Users/Aaron/Desktop/Code/Scan_problems_100" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "G_2D_126x123.txt" 
+file = "TA_258x171.txt" 
 
 # In 1/cm, any spectral range without Raman features. This is used to calculate 
 # the mean background noise which is subtracted from the data.
-spectral_mean_range = (2000, 2100) 
+spectral_mean_range = (350, 450) 
 
-size_px = (126, 123)    # Size of the Scan in pixels
-size_um = (7, 7)        # Size of the Scan in µm
+size_px = (258, 171)    # Size of the Scan in pixels
+size_um = (86, 57)        # Size of the Scan in µm
 
 # When importing new Raman raw data: Which peaks shall be fitted?
 b_fit_TA = False
@@ -118,16 +118,16 @@ b_fit_LO = False
 b_fit_2D = False
 
 # When loading the results from an old fit: Which peaks shall be loaded?
-b_load_TA = False
+b_load_TA = True
 b_load_G = False
 b_load_LO = False
-b_load_2D = True
+b_load_2D = False
 
 # Which peaks shall be mapped?
-b_map_TA = False
+b_map_TA = True
 b_map_G = False
 b_map_LO = False
-b_map_2D = True
+b_map_2D = False
 
 
 ###############################################################################
@@ -169,9 +169,9 @@ max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  
 # Colorbar ranges for all mapped parameters in the form (minimum, maximum).
 # If left blank, no colorscale range will be specified in the respective plot.
-crange_TA_int = ()
-crange_TA_pos = ()
-crange_TA_lw = ()
+crange_TA_int = (500, 2000)
+crange_TA_pos = (260, 270)
+crange_TA_lw = (4, 14)
 crange_G_int = ()
 crange_G_pos = ()
 crange_G_lw = ()
@@ -340,7 +340,10 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
     nx, ny = pdict["size_px"] # Scan size in pixels
     sx, sy = pdict["size_um"] # Scan size in microns
     peakname = pdict["peakname"] # Name of the peak
-    (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"]    
+    (thresh_c, thresh_x0, thresh_lw) = pdict["params_thresh"] # Threshold interval for each parameter
+    crange_int = pdict["crange_int"] # Colorbar range of intensity
+    crange_pos = pdict["crange_pos"] # Colorbar range of position
+    crange_lw = pdict["crange_lw"] # Colorbar range of linewidth
     
     # Conditions to check if the best fit parameters fall into their threshold interval
     conditions = [
@@ -364,12 +367,19 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
     # Their units
     cbar_labels = ["Intensity (arb. u.)", r"$\omega$ (1/cm)", r"$\Gamma$ (1/cm)"]
     
+    # Put cranges in list so they can be looped
+    cranges = [crange_int, crange_pos, crange_lw] 
+    
     # In a loop, plot peak intensity, position and linewidth
     for i in range(3):
         # The first plt.close() avoids funny interactions with the interactive plot
         plt.close()
-        # In this line, i = i+1 to skip the first parameter which is the offset
-        im = plt.imshow(fitresults_ma[:,:,i+1], extent = [0, sx, 0, sy], cmap="gist_rainbow")
+        # In these lines, i = i+1 to skip the first parameter which is the offset.
+        # If a colorbar range was specified, use it.
+        if cranges[i] != ():
+            im = plt.imshow(fitresults_ma[:,:,i+1], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=cranges[i][0], vmax=cranges[i][1])
+        else:
+            im = plt.imshow(fitresults_ma[:,:,i+1], extent = [0, sx, 0, sy], cmap="gist_rainbow")
         plt.xlabel("µm")
         plt.ylabel("µm")
         plt.suptitle(peakname + " " + quantities[i])
@@ -694,14 +704,14 @@ def make_figure(fitresults, fiterrors, pdict):
         im0 = ax0.imshow(fitresults_ma[:,:,1], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
     
     if crange_pos != ():
-        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_pos[0], vmax=crange_pos[1]) # Intensity
+        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_pos[0], vmax=crange_pos[1]) # Position
     else:
-        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
+        im1 = ax1.imshow(fitresults_ma[:,:,2], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Position
     
     if crange_lw != ():
-        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_lw[0], vmax=crange_lw[1]) # Intensity
+        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow", vmin=crange_lw[0], vmax=crange_lw[1]) # Linewidth
     else:
-        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Intensity
+        im2 = ax2.imshow(fitresults_ma[:,:,3], extent = [0, sx, 0, sy], cmap="gist_rainbow") # Linewidth
          
     # Label axes
     ax0.set_xlabel("µm")
@@ -904,5 +914,9 @@ if b_map_LO == True:
 if b_map_2D == True:
     map_lorentz_parameters(fitresults_2D, fiterrors_2D, pdict_2D, folder)
     ax0, ax1, ax2, ax3 = make_figure(fitresults_2D, fiterrors_2D, pdict_2D)
+    
+    
+
+
     
     

@@ -113,7 +113,7 @@ size_um = (7, 7)        # Size of the Scan in µm
 
 # When importing new Raman raw data: Which peaks shall be fitted?
 b_fit_TA = False
-b_fit_G = True
+b_fit_G = False
 b_fit_LO = False
 b_fit_2D = False
 
@@ -121,13 +121,13 @@ b_fit_2D = False
 b_load_TA = False
 b_load_G = False
 b_load_LO = False
-b_load_2D = False
+b_load_2D = True
 
 # Which peaks shall be mapped?
 b_map_TA = False
-b_map_G = True
+b_map_G = False
 b_map_LO = False
-b_map_2D = False
+b_map_2D = True
 
 
 ###############################################################################
@@ -140,7 +140,7 @@ b_map_2D = False
 startparams_TA = [0, 250, 3]
 startparams_G = [0, 8E3, 13]
 startparams_LO = [0, 5E3, 5]
-startparams_2D = [0, 2E4, 25]
+startparams_2D = [0, 2E4, 22]
 
 # Threshold parameters for excluding implausible fit results
 # NOTE: These are not boundary values for the fitting routine!
@@ -161,8 +161,8 @@ thresh_LO_x0 = [1610, 1630]   # Position
 thresh_LO_lw = [0.8, 30]      # Linewidth
 
 thresh_2D_c = [1E3, 1E7]      # Intensity
-thresh_2D_x0 = [2650, 2700]   # Position
-thresh_2D_lw = [16, 60]       # Linewidth
+thresh_2D_x0 = [2650, 2710]   # Position
+thresh_2D_lw = [14, 60]       # Linewidth
 
 max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  #       values will be excluded from the map.
@@ -577,9 +577,11 @@ def onclick(event, fitresults, fiterrors, pdict):
                 # Exact location of click in axis units
                 valx, valy = event.xdata, event.ydata
                 
-                # Find index coordinates of click position
+                # Find index coordinates of click position. The +1 at y_map en-
+                # sures that the shown spectrum really belongs to the clicked
+                # pixel, otherwise there is a mismatch of exactly one pixel.
                 x_map = np.abs(xaxis - valx).argmin()
-                y_map = np.abs(yaxis - valy).argmin()
+                y_map = np.abs(yaxis - valy).argmin() + 1
                 
                 # Extract required variables from the pdict
                 plotrange = pdict["plotrange"]
@@ -821,7 +823,7 @@ if b_fit_2D == True:
     pdict_2D["size_px"] = size_px
     pdict_2D["size_um"] = size_um
     pdict_2D["peakname"] = "2D"
-    pdict_2D["fitrange"] = (2600, 2800)             # Data range for fitting
+    pdict_2D["fitrange"] = (2500, 2850)             # Data range for fitting
     pdict_2D["plotrange"] = (2400, 2900)            # Data range for plotting
     pdict_2D["params_thresh"] = (thresh_2D_c, thresh_2D_x0, thresh_2D_lw)
     pdict_2D["crange_int"] = crange_2D_int

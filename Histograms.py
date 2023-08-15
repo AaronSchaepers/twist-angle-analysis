@@ -279,6 +279,13 @@ def make_histograms(fitresults, fiterrors, pdict, theta=0):
         ax.set_ylabel("N")
         fig.suptitle(peakname + " " + quantities[i])
         plt.savefig(folder+"/"+peakname + "_hist_" + quantities[i]+".pdf", format="pdf", dpi=300)
+        plt.savefig(folder+"/"+peakname + "_hist_" + quantities[i]+".svg", format="svg", dpi=300)
+        
+        # Save histogram data
+        n, bins = np.histogram(hist_data, bins=N, range=histranges[i])
+        with open(folder + "/" + peakname + "_hist_" + quantities[i], "wb") as file:
+            pickle.dump([n, bins], file)
+
      
     # If an array of twist angles was provided, make a histogram of that too
     if b_hist_TA:
@@ -320,10 +327,15 @@ def make_histograms(fitresults, fiterrors, pdict, theta=0):
         hist_data = (theta*(1-mask)).flatten()
         fig = plt.figure(figsize=(5,5))
         ax = fig.add_subplot(111)
-        ax.hist(hist_data, bins=N, range=histrange_theta)
+        n, bins, _ = ax.hist(hist_data, bins=N, range=histrange_theta)
         ax.set_xlabel("Twist angle (°)")
         ax.set_ylabel("N")
         plt.savefig(folder+"/twist_angle_hist.pdf", format="pdf", dpi=300)
+        
+        # Save histogram data
+        n, bins = np.histogram(hist_data, bins=N, range=histrange_theta)
+        with open(folder+"/twist_angle_hist", "wb") as file:
+            pickle.dump([n, bins], file)
      
     return()
 

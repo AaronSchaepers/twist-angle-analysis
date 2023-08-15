@@ -382,6 +382,7 @@ def map_lorentz_parameters(fitresults, fiterrors, pdict, folder):
         plt.suptitle(peakname + " " + quantities[i])
         plt.colorbar(im, label=cbar_labels[i])
         plt.savefig(folder+"/"+peakname + "_" + quantities[i]+".pdf", format="pdf", dpi=300)
+        plt.savefig(folder+"/"+peakname + "_" + quantities[i]+".svg", format="svg", dpi=300)
         plt.close()
 
     return()
@@ -527,6 +528,7 @@ def map_theta(fitresults, fiterrors, pdict, folder):
     plt.suptitle("Twist angle")
     plt.colorbar(im, label=r"$\vartheta_{TA}$ (°)")
     plt.savefig(folder + "/" + "twist_angle.pdf", format="pdf", dpi=300)
+    plt.savefig(folder + "/" + "twist_angle.svg", format="svg", dpi=300)
     plt.close()
     
     

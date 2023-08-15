@@ -13,7 +13,7 @@ PREPARATION
     directory as this code.
 
 
-HOW TO USE THIS CODE
+hiHOW TO USE THIS CODE
 
     As you scroll down, you will see that this code has four sections:
         1. User input section
@@ -35,43 +35,41 @@ HOW TO USE THIS CODE
           within which the fit results are accepted as realistic.
         - Run this code to start the fitting and mapping procedure
         
-    The default values give good results for the TA, G, LO and 2D peak. You
-    might want to save them by commenting them out if you change them so they
-    don't get lost.
+    The default initial and threshold values give good results for the TA, G, 
+    LO and 2D peak. You might want to save them by commenting them out if you 
+    change them so they don't get lost.
 
     Here is what the code does, depending on your input:
     
     1. If fitting is activated:
-        - Import the Raman data you specified
+        - Import the Raman raw data you specified
         - Perform Lorentzian fits to all the peaks you selected (a single fit
           for each peak)
-        - Export the numerical fitresults for each peak, storing them in the same 
-          directory that contains the raw data.
+        - Export a pickle file that contains all relevant data required to later
+          reproduce the fitresults: x (1D array) and y (3D array) raw data of the Raman 
+          scan, a dictionnary containing all the preferences from the user 
+          input sections, the fitresults (3D array), the corresponding standard
+          deviations (3D array) and a fiterrors array (2D) that documents where
+          and why certain fits failed. This file is stored in the same directory
+          that contains the original raw data.
           
     2. If loading an olf fit is activated:
-        - Load the results of a previously saved fit so that they are available
-          for the plotting routine
+        - Import the raw data and results of a previously saved fit so that 
+          they are available for the plotting routine
         
-    3. 
+    3. If mapping is activated:
+        - Take the fit results and export maps of intensity, position and 
+          linewidth for all selected peaks. If the TA peak is selected, the 
+          twist angle and its gradient are also included. They are saved in the 
+          same directory where the original raw data is stored.
+          stored.
+        - Open an interactive window ONLY FOR THE LAST SELECTED PEAK. 
+          The interactive window shows the maps of intensity, position and linewidth.
+          Furthermore, you can double-click in any of these maps and it will show the
+          Raman spectrum and fit in this data point. This is very helpful when it 
+          comes to check the quality of the fits and finding the right threshold 
+          parameters that serve to exclude faulty spectra.
         
-    1. Export the maps of intensity, position and linewidth for all selected
-       peaks. They are saved in the same directory where the scan data is 
-       stored.
-       
-    2. 
-    
-        Firstly, it will 
-    export the maps of all selected peaks to . Secondly, it will open up an interactive window ONLY FOR
-    THE LAST SELECTED PEAK. That means you can run the fitting and mapping for
-    multiple peaks and you will find the results in the directory given in
-    Section 1. But only for the last peak selected for mapping, the interactive
-    window will show up.
-    
-    The interactive window shows the maps of intensity, position and linewidth.
-    Furthermore, you can double-click in any of these maps and it will show the
-    Raman spectrum and fit in this data point. This is very helpful when it 
-    comes to check the quality of the fits and finding the right threshold 
-    parameters that serve to exclude faulty spectra.
     
 IDEAS FOR FUTURE FEATURES
     - Use the threshold dynamically in the interactive plot
@@ -99,17 +97,17 @@ a = 0.246 # Graphene lattice constant in nm
 ###############################################################################
 
 # Directory of the Raman data
-folder = "/Users/Aaron/Desktop/Code/Scan_problems_100" 
+folder = "/Users/Aaron/Desktop/Code/Test_data" 
 
 # Name of the .txt file containing the Raman data, given with suffix
-file = "TA_258x171.txt" 
+file = "test_data_100x100.txt" 
 
 # In 1/cm, any spectral range without Raman features. This is used to calculate 
 # the mean background noise which is subtracted from the data.
 spectral_mean_range = (350, 450) 
 
-size_px = (258, 171)    # Size of the Scan in pixels
-size_um = (86, 57)        # Size of the Scan in µm
+size_px = (100, 100)    # Size of the Scan in pixels
+size_um = (7, 7)        # Size of the Scan in µm
 
 # When importing new Raman raw data: Which peaks shall be fitted?
 b_fit_TA = False
@@ -169,9 +167,9 @@ max_gradient = 1 # °/µm, upper bound for the twist angle gradient map. Larger
                  
 # Colorbar ranges for all mapped parameters in the form (minimum, maximum).
 # If left blank, no colorscale range will be specified in the respective plot.
-crange_TA_int = (500, 2000)
-crange_TA_pos = (260, 270)
-crange_TA_lw = (4, 14)
+crange_TA_int = (10, 500)
+crange_TA_pos = (250, 275)
+crange_TA_lw = (0, 14)
 crange_G_int = ()
 crange_G_pos = ()
 crange_G_lw = ()
@@ -220,7 +218,6 @@ def read_raman_scan(folder, file, size_px, spectral_mean_range):
     # to the x and y axes of the scan and the spectra will be stacked along the
     # third axis.
     data = np.zeros((ny,nx,len(data_str)))
-    print(data_float.shape)
     
     # Get indices of the averaging interval for baseline shifting
     i_xmin_mean = np.abs(xlist - spectral_mean_range[0]).argmin()
@@ -279,7 +276,7 @@ def fit_to_map(xdata, data, pdict):
     fitresults = np.zeros((ny,nx,4))          # Array with (b, c, x0, lw) for each x/y-datapoint in which fit was successful
     fitresults_std = np.zeros((ny,nx,4))      # Array with the uncertainties of the fit results
     fiterrors = np.zeros((ny,nx), dtype= "object")    # Array with inormation if and why the fit failed for each x/y-datapoint
-    
+
     # This expression searches the xlist for the wave number values 
     # closest to the chosen fitrange and retrieves their indexes
     i_start = np.abs(xdata - fitrange[0]).argmin()
@@ -863,6 +860,11 @@ if b_load_TA == True:
     pdict_TA["crange_grad_theta"] = crange_grad_theta
     pdict_TA["max_gradient"] = max_gradient
     
+    # Save updated pdict to pickle file
+    with open(folder+"/TA", "wb") as file:
+        pickle.dump([xdata, data, pdict_TA, fitresults_TA, fitresults_std_TA, fiterrors_TA], file)
+
+    
     
 if b_load_G == True:
    
@@ -874,6 +876,11 @@ if b_load_G == True:
     pdict_G["crange_pos"] = crange_G_pos
     pdict_G["crange_lw"] = crange_G_lw
     
+    # Save updated pdict to pickle file
+    with open(folder+"/G", "wb") as file:
+        pickle.dump([xdata, data, pdict_G, fitresults_G, fitresults_std_G, fiterrors_G], file)
+
+    
     
 if b_load_LO == True:
 
@@ -884,6 +891,11 @@ if b_load_LO == True:
     pdict_LO["crange_int"] = crange_LO_int
     pdict_LO["crange_pos"] = crange_LO_pos
     pdict_LO["crange_lw"] = crange_LO_lw
+    
+    # Save updated pdict to pickle file
+    with open(folder+"/LO", "wb") as file:
+        pickle.dump([xdata, data, pdict_LO, fitresults_LO, fitresults_std_LO, fiterrors_LO], file)
+
 
 
 if b_load_2D == True:
@@ -895,16 +907,21 @@ if b_load_2D == True:
     pdict_2D["crange_int"] = crange_2D_int
     pdict_2D["crange_pos"] = crange_2D_pos
     pdict_2D["crange_lw"] = crange_2D_lw  
+    
+    # Save updated pdict to pickle file
+    with open(folder+"/2D", "wb") as file:
+        pickle.dump([xdata, data, pdict_2D, fitresults_2D, fitresults_std_2D, fiterrors_2D], file)
 
 
-      
+
 ###############################################################################
 # 4.3 Open the interactive figures, save the maps
 ###############################################################################
 if b_map_TA == True:
     map_lorentz_parameters(fitresults_TA, fiterrors_TA, pdict_TA, folder)
-    map_theta(fitresults_TA, fiterrors_TA, pdict_TA, folder)
+    map_theta(fitresults_TA, fiterrors_TA, pdict_TA, folder)    
     ax0, ax1, ax2, ax3 = make_figure(fitresults_TA, fiterrors_TA, pdict_TA)
+    
 if b_map_G == True:
     map_lorentz_parameters(fitresults_G, fiterrors_G, pdict_G, folder)
     ax0, ax1, ax2, ax3 = make_figure(fitresults_G, fiterrors_G, pdict_G)
